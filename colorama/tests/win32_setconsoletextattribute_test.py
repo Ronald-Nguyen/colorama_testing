@@ -1,5 +1,8 @@
 import unittest
 from unittest.mock import patch
+import inspect
+import dis
+
 import colorama.win32 as win32
 
 
@@ -26,6 +29,35 @@ class Win32SetConsoleTextAttributeTest(unittest.TestCase):
             # Verify the correct calls and arguments
             mock_get.assert_called_once_with(stream_id)
             mock_set.assert_called_once_with(fake_handle, attrs)
+
+    def test_inline_variable_handle_is_applied(self):
+        """
+        Verifies the inline-variable refactoring was applied by asserting:
+        - No local variable named 'handle' exists in the function.
+        - No STORE_* to a local named 'handle' appears in the bytecode.
+        - The function is a Python function (not a stub/builtin).
+        """
+        func = win32.SetConsoleTextAttribute
+
+        # Robust function check (avoid types.FunctionType conflicts)
+        self.assertTrue(
+            inspect.isfunction(func),
+            "Expected a Python function implementation, not a stub or builtin."
+        )
+
+        # 1) There must be no local variable named 'handle'
+        self.assertNotIn(
+            "handle",
+            func.__code__.co_varnames,
+            "Local variable 'handle' still present; inline-variable refactoring not applied.",
+        )
+
+        # 2) There must be no STORE_* instruction targeting 'handle'
+        for ins in dis.get_instructions(func):
+            self.assertFalse(
+                ins.opname.startswith("STORE") and ins.argval == "handle",
+                "Found a STORE to local 'handle'; inline-variable refactoring not applied.",
+            )
 
 
 if __name__ == "__main__":

@@ -14,7 +14,7 @@ from ollama import ChatResponse, chat
 
 REFACTORING = 'inline_variable'
 PATH = 'colorama'
-ITERATIONS = 10
+ITERATIONS = 1
 GEMINI = 'gemini-3-pro-preview'
 LLAMA = 'llama-3.3-70b-versatile'
 MISTRAL = 'mistral-large-2512'
