@@ -24,7 +24,7 @@ def calculate_total(price, quantity):
 ```  
 
 Task:
-1. Inline the temporary variable subtotal in method: `calculate_total`.
+1. Inline the temporary variable subtotal in method: `calculate_total` in the file: `calculate.py`.
 2. Update every relevant occurrence across the entire project.
 3. Output format (for EACH modified file):
 
@@ -45,7 +45,7 @@ def get_user_name(user):
 
     
 Task:
-1. Inline the temporary variable name in the method: `get_user_name`.
+1. Inline the temporary variable name in the method: `get_user_name` in the file: `user.py`.
 2. Update every relevant occurrence across the entire project.
 3. Output format (for EACH modified file):
 
@@ -57,7 +57,7 @@ def get_user_name(user):
 
     
 Your Task:
-1. Inline the temporary variable name in the method: `SetConsoleTextAttribute`
+1. Inline the temporary variable name in the method: `SetConsoleTextAttribute`in the file: `win32.py`
 2. Update every relevant occurrence across the entire project.
 3. For EACH modified file, respond exactly in the following format:
 
