@@ -57,7 +57,7 @@ def get_user_name(user):
 
     
 Your Task:
-1. Inline the temporary variable name in the method: `SetConsoleTextAttribute`in the file: `win32.py`
+1. Inline the temporary variable `handle` in the method: `SetConsoleTextAttribute`in the file: `win32.py`
 2. Update every relevant occurrence across the entire project.
 3. For EACH modified file, respond exactly in the following format:
 
