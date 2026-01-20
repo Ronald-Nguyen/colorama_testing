@@ -1,5 +1,5 @@
 Iteration 2
-Timestamp: 2026-01-20T17:34:15.685283
+Timestamp: 2026-01-20T18:34:56.960620
 Success: True
 
 ============================================================
@@ -10,16 +10,16 @@ benchmark: 5.2.3 (defaults: timer=time.perf_counter disable_gc=False min_rounds=
 rootdir: C:\Users\ronal\colorama_testing
 configfile: pyproject.toml
 plugins: anyio-4.12.1, hypothesis-6.148.8, benchmark-5.2.3, cov-7.0.0
-collected 54 items
+collected 58 items
 
 colorama\tests\ansi_test.py ...                                          [  5%]
-colorama\tests\ansitowin32_test.py .......................               [ 48%]
-colorama\tests\initialise_test.py ssssssssss.                            [ 68%]
-colorama\tests\isatty_test.py .......                                    [ 81%]
-colorama\tests\win32_setconsoletextattribute_test.py .s                  [ 85%]
+colorama\tests\ansitowin32_test.py .......................               [ 44%]
+colorama\tests\initialise_test.py ssssssssss.                            [ 63%]
+colorama\tests\isatty_test.py .......                                    [ 75%]
+colorama\tests\refactoring_test.py .s....                                [ 86%]
 colorama\tests\winterm_test.py ........                                  [100%]
 
-======================= 43 passed, 11 skipped in 0.51s ========================
+======================= 47 passed, 11 skipped in 0.47s ========================
 
 ============================================================
 STDERR:

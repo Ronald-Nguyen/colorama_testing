@@ -10,7 +10,7 @@ from unittest import result
 
 REFACTORING = 'getter_setter'
 PATH = 'colorama'
-ITERATIONS = 3
+ITERATIONS = 10
 GEMINI3 = 'gemini-3-pro-preview'
 GEMINI2 = 'gemini-2.5-flash'
 LLAMA = 'llama-3.3-70b-versatile'
@@ -18,7 +18,7 @@ MISTRAL = 'mistral-large-2512'
 CODESTRAL = 'codestral-2501'
 MODEL_OLLAMA = 'devstral-2_123b-cloud'
 MODEL_GROQ = LLAMA
-MODEL_GEMINI = GEMINI3
+MODEL_GEMINI = GEMINI2
 MODEL_MISTRAL = CODESTRAL
 GROQ_API_KEY = os.environ.get('GROQ_API_KEY')
 GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')

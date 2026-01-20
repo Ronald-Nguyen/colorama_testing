@@ -4,6 +4,7 @@ import inspect
 import dis
 
 import colorama.win32 as win32
+from colorama.ansitowin32 import AnsiToWin32
 
 
 class Win32SetConsoleTextAttributeTest(unittest.TestCase):
@@ -59,6 +60,54 @@ class Win32SetConsoleTextAttributeTest(unittest.TestCase):
                 ins.opname.startswith("STORE") and ins.argval == "handle",
                 "Found a STORE to local 'handle'; inline-variable refactoring not applied.",
             )
+
+class TestAnsiToWin32ConvertGetterSetter(unittest.TestCase):
+    def setUp(self):
+        # Create a safe instance that avoids OS-dependent behavior by passing explicit flags
+        self.stream = AnsiToWin32(wrapped=object(), convert=False, strip=False, autoreset=False)
+
+    def test_convert_is_property(self):
+        # Class must expose 'convert' as a property
+        self.assertTrue(
+            isinstance(AnsiToWin32.convert, property),
+            "AnsiToWin32.convert should be a @property",
+        )
+        # Getter and setter should be regular Python functions
+        self.assertTrue(inspect.isfunction(AnsiToWin32.convert.fget))
+        self.assertTrue(
+            hasattr(AnsiToWin32.convert, "fset") and inspect.isfunction(AnsiToWin32.convert.fset),
+            "convert should have a setter",
+        )
+
+    def test_convert_backing_attribute_used(self):
+        # Instance should not store 'convert' directly in __dict__
+        self.assertNotIn(
+            "convert",
+            self.stream.__dict__,
+            "Direct storage of 'convert' found; expected backing attribute via property.",
+        )
+        # Expect a backing attribute, commonly named '_convert' (or similar)
+        self.assertTrue(
+            any(name in self.stream.__dict__ for name in ("_convert", "__convert", "convert_")),
+            "Expected a backing attribute for 'convert' (e.g., _convert) in __dict__",
+        )
+
+    def test_convert_getter_setter_roundtrip(self):
+        # Roundtrip assignment and read using the property
+        self.stream.convert = True
+        self.assertTrue(self.stream.convert, "convert setter should set to True")
+        self.stream.convert = False
+        self.assertFalse(self.stream.convert, "convert setter should set to False")
+
+    def test_convert_property_does_not_break_behavioral_contract(self):
+        # Basic behavioral check: should_wrap reflects convert when strip=False
+        # (This does not rely on OS-specific setup.)
+        self.stream.strip = False
+        self.stream.convert = False
+        self.assertFalse(self.stream.should_wrap(), "should_wrap should be False when convert=False and strip=False")
+
+        self.stream.convert = True
+        self.assertTrue(self.stream.should_wrap(), "should_wrap should be True when convert=True and strip=False")
 
 
 if __name__ == "__main__":

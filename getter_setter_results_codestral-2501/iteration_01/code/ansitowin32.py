@@ -82,6 +82,7 @@ class AnsiToWin32:
         self._convert = convert
 
         self._win32_calls = self.get_win32_calls()
+
         self._on_stderr = self._wrapped is sys.stderr
 
     @property
@@ -141,10 +142,10 @@ class AnsiToWin32:
         self._on_stderr = value
 
     def should_wrap(self):
-        return self.convert or self.strip or self.autoreset
+        return self._convert or self._strip or self._autoreset
 
     def get_win32_calls(self):
-        if self.convert and winterm:
+        if self._convert and winterm:
             return {
                 AnsiStyle.RESET_ALL: (winterm.reset_all, ),
                 AnsiStyle.BRIGHT: (winterm.style, WinStyle.BRIGHT),
@@ -188,19 +189,19 @@ class AnsiToWin32:
         return dict()
 
     def write(self, text):
-        if self.strip or self.convert:
+        if self._strip or self._convert:
             self.write_and_convert(text)
         else:
-            self.wrapped.write(text)
-            self.wrapped.flush()
-        if self.autoreset:
+            self._wrapped.write(text)
+            self._wrapped.flush()
+        if self._autoreset:
             self.reset_all()
 
     def reset_all(self):
-        if self.convert:
+        if self._convert:
             self.call_win32('m', (0,))
-        elif not self.strip and not self.stream.closed:
-            self.wrapped.write(Style.RESET_ALL)
+        elif not self._strip and not self._stream.closed:
+            self._wrapped.write(Style.RESET_ALL)
 
     def write_and_convert(self, text):
         cursor = 0
@@ -214,11 +215,11 @@ class AnsiToWin32:
 
     def write_plain_text(self, text, start, end):
         if start < end:
-            self.wrapped.write(text[start:end])
-            self.wrapped.flush()
+            self._wrapped.write(text[start:end])
+            self._wrapped.flush()
 
     def convert_ansi(self, paramstring, command):
-        if self.convert:
+        if self._convert:
             params = self.extract_params(command, paramstring)
             self.call_win32(command, params)
 
@@ -240,22 +241,22 @@ class AnsiToWin32:
     def call_win32(self, command, params):
         if command == 'm':
             for param in params:
-                if param in self.win32_calls:
-                    func_args = self.win32_calls[param]
+                if param in self._win32_calls:
+                    func_args = self._win32_calls[param]
                     func = func_args[0]
                     args = func_args[1:]
-                    kwargs = dict(on_stderr=self.on_stderr)
+                    kwargs = dict(on_stderr=self._on_stderr)
                     func(*args, **kwargs)
         elif command in 'J':
-            winterm.erase_screen(params[0], on_stderr=self.on_stderr)
+            winterm.erase_screen(params[0], on_stderr=self._on_stderr)
         elif command in 'K':
-            winterm.erase_line(params[0], on_stderr=self.on_stderr)
+            winterm.erase_line(params[0], on_stderr=self._on_stderr)
         elif command in 'Hf':
-            winterm.set_cursor_position(params, on_stderr=self.on_stderr)
+            winterm.set_cursor_position(params, on_stderr=self._on_stderr)
         elif command in 'ABCD':
             n = params[0]
             x, y = {'A': (0, -n), 'B': (0, n), 'C': (n, 0), 'D': (-n, 0)}[command]
-            winterm.cursor_adjust(x, y, on_stderr=self.on_stderr)
+            winterm.cursor_adjust(x, y, on_stderr=self._on_stderr)
 
     def convert_osc(self, text):
         for match in self.ANSI_OSC_RE.finditer(text):
@@ -270,4 +271,4 @@ class AnsiToWin32:
         return text
 
     def flush(self):
-        self.wrapped.flush()
+        self._wrapped.flush()

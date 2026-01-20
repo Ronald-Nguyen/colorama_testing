@@ -1,0 +1,42 @@
+Iteration 1
+Timestamp: 2026-01-20T18:07:29.745045
+Success: False
+
+============================================================
+STDOUT:
+============================= test session starts =============================
+platform win32 -- Python 3.14.2, pytest-9.0.2, pluggy-0.1.dev918+gfc4045693
+benchmark: 5.2.3 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+rootdir: C:\Users\ronal\colorama_testing
+configfile: pyproject.toml
+plugins: anyio-4.12.1, hypothesis-6.148.8, benchmark-5.2.3, cov-7.0.0
+collected 58 items
+
+colorama\tests\ansi_test.py ...                                          [  5%]
+colorama\tests\ansitowin32_test.py .......................               [ 44%]
+colorama\tests\initialise_test.py ssssssssss.                            [ 63%]
+colorama\tests\isatty_test.py .......                                    [ 75%]
+colorama\tests\refactoring_test.py .s..F.                                [ 86%]
+colorama\tests\winterm_test.py ........                                  [100%]
+
+================================== FAILURES ===================================
+_________ TestAnsiToWin32ConvertGetterSetter.test_convert_is_property _________
+
+self = <colorama.tests.refactoring_test.TestAnsiToWin32ConvertGetterSetter testMethod=test_convert_is_property>
+
+    def test_convert_is_property(self):
+        # Class must expose 'convert' as a property
+        self.assertTrue(
+>           isinstance(type(AnsiToWin32).convert, property),
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^
+            "AnsiToWin32.convert should be a @property",
+        )
+E       AttributeError: type object 'type' has no attribute 'convert'
+
+colorama\tests\refactoring_test.py:72: AttributeError
+=========================== short test summary info ===========================
+FAILED colorama/tests/refactoring_test.py::TestAnsiToWin32ConvertGetterSetter::test_convert_is_property
+================== 1 failed, 46 passed, 11 skipped in 0.47s ===================
+
+============================================================
+STDERR:
