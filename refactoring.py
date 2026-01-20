@@ -15,18 +15,19 @@ from ollama import ChatResponse, chat
 REFACTORING = 'inline_variable'
 PATH = 'colorama'
 ITERATIONS = 1
-GEMINI = 'gemini-3-pro-preview'
+GEMINI3 = 'gemini-3-pro-preview'
+GEMINI2 = 'gemini-2.5-flash'
 LLAMA = 'llama-3.3-70b-versatile'
 MISTRAL = 'mistral-large-2512'
 CODESTRAL = 'codestral-2501'
 MODEL_OLLAMA = 'devstral-2_123b-cloud'
 MODEL_GROQ = LLAMA
-MODEL_GEMINI = GEMINI
-MODEL_MISTRAL = CODESTRAL
+MODEL_GEMINI = GEMINI2
+MODEL_MISTRAL = MISTRAL
 GROQ_API_KEY = os.environ.get('GROQ_API_KEY')
 GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
 MISTRAL_API_KEY = os.environ.get('MISTRAL_API_KEY')
-LLM_API_KEY = MISTRAL_API_KEY
+LLM_API_KEY = GEMINI_API_KEY
 client = None
 MODEL = None
 

@@ -3,13 +3,13 @@ Task Description
 You are a strict code‑refactoring engine. You follow all rules exactly as written. Your task is to perform an Inline Variable refactoring in a Python project. Certain temporary variables should be inlined—replace the variable with their defining value/expression wherever they are used.
 
 Please note:
-1. The code must still function perfectly after the renaming.
+1. The code must still function perfectly after the refactoring.
 2. All imports, references, and function calls must be updated accordingly.
 3. The style, formatting, and structure of the code must be preserved.
 4. Do not introduce any new functionality, logic changes, or unrelated formatting changes.
 5. For every modified file, return the complete updated file content to ensure that no changes are overlooked.
 6. The semantics and behavior of the code must not change.
-7. Only include files that required changes due to the renaming.
+7. Only include files that required changes.
 8. Respond with the code blocks only. Your entire response must be machine-readable. Do not include any conversational filler.
 
 
@@ -24,7 +24,7 @@ def calculate_total(price, quantity):
 ```  
 
 Task:
-1. Inline the temporary variable subtotal in method: `calculate_total` in the file: `calculate.py`.
+1. Inline the temporary variable `subtotal` in method: `calculate_total` in the file: `calculate.py`.
 2. Update every relevant occurrence across the entire project.
 3. Output format (for EACH modified file):
 
@@ -45,7 +45,7 @@ def get_user_name(user):
 
     
 Task:
-1. Inline the temporary variable name in the method: `get_user_name` in the file: `user.py`.
+1. Inline the temporary variable `name` in the method: `get_user_name` in the file: `user.py`.
 2. Update every relevant occurrence across the entire project.
 3. Output format (for EACH modified file):
 
