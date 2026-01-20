@@ -27,7 +27,7 @@ print(person.name)
 person.name = "Bob"
 ```
 Task:
-1. Encapsulate the attribute `{attribute_name}` within the class `{class_name}` in the file `{file_name}`.
+1. Encapsulate the attributes `name` and `person` within the class `Person` in the file `person.py`.
 2. Replace all direct attribute accesses with Python properties (`@property` and `@setter`).
 3. Update all references both inside the class and from external calls.
 
@@ -66,15 +66,16 @@ account = BankAccount(1000)
 account.balance = 500
 ```
 Task:
-1. Encapsulate the attribute `{attribute_name}` within the class `{class_name}` in the file `{file_name}`.
+1. Encapsulate the attribute `balance` within the class `BankAccount` in the file `bank.py`.
 2. Replace all direct attribute accesses with Python properties (`@property` and `@setter`).
 3. Update all references both inside the class and from external calls.
 
 Output:
-File `person.py`:
+File `bank.py`:
 ```python
 class BankAccount: 
-	def init(self, balance): self._balance = balance
+	def init(self, balance): 
+        self._balance = balance
 
 	@property
 	def balance(self):
@@ -92,7 +93,7 @@ account.balance = 500
 ```
 
 Task:
-1. Encapsulate the attribute `{attribute_name}` within the class `{class_name}` in the file `{file_name}`.
+1. Encapsulate the attribute `convert` within the class `AnsiToWin32` in the file `ansitowin32.py`.
 2. Replace all direct attribute accesses with Python properties (`@property` and `@setter`).
 3. Update all references both inside the class and from external calls.
 4. For EACH modified file, respond exactly in the following format:
