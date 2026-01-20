@@ -27,7 +27,7 @@ print(person.name)
 person.name = "Bob"
 ```
 Task:
-1. Encapsulate the attributes `name` and `person` within the class `Person` in the file `person.py`.
+1. Encapsulate the attribute `name` within the class `Person` in the file `person.py`.
 2. Replace all direct attribute accesses with Python properties (`@property` and `@setter`).
 3. Update all references both inside the class and from external calls.
 
@@ -74,7 +74,7 @@ Output:
 File `bank.py`:
 ```python
 class BankAccount: 
-	def init(self, balance): 
+	def __init__(self, balance): 
         self._balance = balance
 
 	@property
