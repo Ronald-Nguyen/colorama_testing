@@ -11,7 +11,7 @@ Please note:
 6. The semantics and behavior of the code must not change.
 7. Only include files that required changes.
 8. Respond with the code blocks only. Your entire response must be machine-readable. Do not include any conversational filler.
-
+9. If you are unsure, do not guess. Only modify code when the change is certain.
 
 Examples of inline variable tasks:
 Example 1: 
