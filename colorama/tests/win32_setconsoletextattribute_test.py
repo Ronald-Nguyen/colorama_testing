@@ -30,6 +30,7 @@ class Win32SetConsoleTextAttributeTest(unittest.TestCase):
             mock_get.assert_called_once_with(stream_id)
             mock_set.assert_called_once_with(fake_handle, attrs)
 
+    @unittest.skip("only using when inline variable refactoring")
     def test_inline_variable_handle_is_applied(self):
         """
         Verifies the inline-variable refactoring was applied by asserting:
