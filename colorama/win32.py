@@ -120,7 +120,8 @@ else:
         return csbi
 
     def SetConsoleTextAttribute(stream_id, attrs):
-        return _SetConsoleTextAttribute(_GetStdHandle(stream_id), attrs)
+        handle = _GetStdHandle(stream_id)
+        return _SetConsoleTextAttribute(handle, attrs)
 
     def SetConsoleCursorPosition(stream_id, position, adjust=True):
         position = COORD(*position)

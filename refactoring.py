@@ -7,14 +7,10 @@ import subprocess
 from pathlib import Path
 from datetime import datetime
 from unittest import result
-from google import genai
-from groq import Groq
-from mistralai import Mistral
-from ollama import ChatResponse, chat
 
 REFACTORING = 'inline_variable'
 PATH = 'colorama'
-ITERATIONS = 1
+ITERATIONS = 10
 GEMINI3 = 'gemini-3-pro-preview'
 GEMINI2 = 'gemini-2.5-flash'
 LLAMA = 'llama-3.3-70b-versatile'
@@ -23,15 +19,16 @@ CODESTRAL = 'codestral-2501'
 MODEL_OLLAMA = 'devstral-2_123b-cloud'
 MODEL_GROQ = LLAMA
 MODEL_GEMINI = GEMINI2
-MODEL_MISTRAL = MISTRAL
+MODEL_MISTRAL = CODESTRAL
 GROQ_API_KEY = os.environ.get('GROQ_API_KEY')
 GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
 MISTRAL_API_KEY = os.environ.get('MISTRAL_API_KEY')
-LLM_API_KEY = GEMINI_API_KEY
+LLM_API_KEY = MISTRAL_API_KEY
 client = None
 MODEL = None
 
 if LLM_API_KEY == GROQ_API_KEY:
+    from groq import Groq
     MODEL = MODEL_GROQ
     try:
         client = Groq(api_key=LLM_API_KEY)
@@ -40,6 +37,7 @@ if LLM_API_KEY == GROQ_API_KEY:
         print(f"Fehler beim Laden des API-Keys: {e}")
         exit(1)
 elif LLM_API_KEY == MISTRAL_API_KEY:
+    from mistralai import Mistral
     MODEL = MODEL_MISTRAL
     try:
         client = Mistral(api_key=LLM_API_KEY)
@@ -48,6 +46,7 @@ elif LLM_API_KEY == MISTRAL_API_KEY:
         print(f"Fehler beim Laden des API-Keys: {e}")
         exit(1)
 elif LLM_API_KEY == GEMINI_API_KEY:
+    from google import genai
     MODEL = MODEL_GEMINI
     try:
         client = genai.Client(api_key=LLM_API_KEY)
@@ -56,6 +55,7 @@ elif LLM_API_KEY == GEMINI_API_KEY:
         print(f"Fehler beim Laden des API-Keys: {e}")
         exit(1)
 else:
+    from ollama import ChatResponse, chat
     MODEL = MODEL_OLLAMA
 
 
@@ -222,7 +222,8 @@ def gemini_generate(final_prompt: str) -> str:
     
     if not response_text:
         raise ValueError("Leere Antwort erhalten")
-    
+
+    usage = response.usage_metadata
     return response_text
 
 def mistral_generate(prompt: str) -> str:
