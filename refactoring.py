@@ -54,9 +54,6 @@ elif LLM_API_KEY == GEMINI_API_KEY:
     except Exception as e:
         print(f"Fehler beim Laden des API-Keys: {e}")
         exit(1)
-else:
-    from ollama import ChatResponse, chat
-    MODEL = MODEL_OLLAMA
 
 
 
