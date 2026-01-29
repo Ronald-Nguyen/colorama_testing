@@ -11,6 +11,7 @@ Please note:
 7. Only include files that required changes.
 8. Respond with the code blocks only. Your entire response must be machine-readable. Do not include any conversational filler.
 9. If you are unsure, do not guess. Only modify code when the change is certain.
+10. Every response must include meaningful modifications, improvements, or transformations. Returning the same code, even partially or with superficial edits, is strictly prohibited.
 
 Examples of strategy pattern refactorings:
 Example 1:
