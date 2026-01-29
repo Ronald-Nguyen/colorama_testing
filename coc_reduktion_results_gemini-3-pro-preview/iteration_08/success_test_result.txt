@@ -1,0 +1,24 @@
+Iteration 8
+Timestamp: 2026-01-22T21:53:30.043593
+Success: True
+
+============================================================
+STDOUT:
+============================= test session starts =============================
+platform win32 -- Python 3.13.5, pytest-9.0.2, pluggy-0.1.dev927+gae3d9d2fb
+rootdir: C:\Users\ronal\colorama_testing
+configfile: pyproject.toml
+plugins: anyio-4.12.1, cov-7.0.0
+collected 58 items
+
+colorama\tests\ansi_test.py ...                                          [  5%]
+colorama\tests\ansitowin32_test.py .......................               [ 44%]
+colorama\tests\initialise_test.py ssssssssss.                            [ 63%]
+colorama\tests\isatty_test.py .......                                    [ 75%]
+colorama\tests\refactoring_test.py .ss.ss                                [ 86%]
+colorama\tests\winterm_test.py ........                                  [100%]
+
+======================= 44 passed, 14 skipped in 0.38s ========================
+
+============================================================
+STDERR:
