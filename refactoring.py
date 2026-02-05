@@ -10,7 +10,7 @@ from unittest import result
 
 REFACTORING = 'strategy_pattern'
 PATH = 'colorama'
-ITERATIONS = 3
+ITERATIONS = 10
 GEMINI3 = 'gemini-3-pro-preview'
 GEMINI2 = 'gemini-2.5-flash'
 LLAMA = 'llama-3.3-70b-versatile'
@@ -19,7 +19,7 @@ CODESTRAL = 'codestral-2501'
 MODEL_OLLAMA = 'devstral-2_123b-cloud'
 MODEL_GROQ = LLAMA
 MODEL_GEMINI = GEMINI3
-MODEL_MISTRAL = MISTRAL
+MODEL_MISTRAL = CODESTRAL
 GROQ_API_KEY = os.environ.get('GROQ_API_KEY')
 GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
 MISTRAL_API_KEY = os.environ.get('MISTRAL_API_KEY')
@@ -64,7 +64,7 @@ args = parser.parse_args()
 
 PROJECT_DIR = Path(args.project_path)
 PROMPT_TEMPLATE = Path(f"{REFACTORING}.txt").read_text(encoding='utf-8')
-RESULTS_DIR = Path(REFACTORING + "_results_" + MODEL)
+RESULTS_DIR = Path(REFACTORING + "_results2_" + MODEL)
 RESULTS_DIR.mkdir(exist_ok=True)
 
 def get_project_structure(project_dir: Path) -> str:
@@ -258,7 +258,7 @@ def main():
     project_structure = get_project_structure(PROJECT_DIR)
     code_block = get_all_python_files(PROJECT_DIR)
 
-    final_prompt = f"{YOUR_PROMPT}\n\nStruktur:\n{project_structure}\n\nCode:\n{code_block}"
+    final_prompt = f"{YOUR_PROMPT}\n\nStructure:\n{project_structure}\n\nCode:\n{code_block}"
     successful_iterations = 0
     failed_iterations = 0
     
