@@ -8,9 +8,9 @@ from pathlib import Path
 from datetime import datetime
 from unittest import result
 
-REFACTORING = 'strategy_pattern'
+REFACTORING = 'guard_clauses'
 PATH = 'colorama'
-ITERATIONS = 2
+ITERATIONS = 4
 GEMINI3 = 'gemini-3-pro-preview'
 GEMINI2 = 'gemini-2.5-flash'
 LLAMA = 'llama-3.3-70b-versatile'
@@ -64,7 +64,7 @@ args = parser.parse_args()
 
 PROJECT_DIR = Path(args.project_path)
 PROMPT_TEMPLATE = Path(f"{REFACTORING}.txt").read_text(encoding='utf-8')
-RESULTS_DIR = Path(REFACTORING + "_results2_" + MODEL)
+RESULTS_DIR = Path(REFACTORING + "_results_" + MODEL)
 RESULTS_DIR.mkdir(exist_ok=True)
 
 def get_project_structure(project_dir: Path) -> str:
