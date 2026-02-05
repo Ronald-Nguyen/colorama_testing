@@ -222,27 +222,28 @@ class AnsiToWin32:
     def flush(self):
         self.wrapped.flush()
 
-def _strategy_m(param, self):
-    if param in self.win32_calls:
-        func_args = self.win32_calls[param]
-        func = func_args[0]
-        args = func_args[1:]
-        kwargs = dict(on_stderr=self.on_stderr)
-        func(*args, **kwargs)
+def _strategy_m(command, params, on_stderr):
+    for param in params:
+        if param in self.win32_calls:
+            func_args = self.win32_calls[param]
+            func = func_args[0]
+            args = func_args[1:]
+            kwargs = dict(on_stderr=on_stderr)
+            func(*args, **kwargs)
 
-def _strategy_J(param, self):
-    winterm.erase_screen(param, on_stderr=self.on_stderr)
+def _strategy_J(command, params, on_stderr):
+    winterm.erase_screen(params[0], on_stderr=on_stderr)
 
-def _strategy_K(param, self):
-    winterm.erase_line(param, on_stderr=self.on_stderr)
+def _strategy_K(command, params, on_stderr):
+    winterm.erase_line(params[0], on_stderr=on_stderr)
 
-def _strategy_Hf(param, self):
-    winterm.set_cursor_position(param, on_stderr=self.on_stderr)
+def _strategy_Hf(command, params, on_stderr):
+    winterm.set_cursor_position(params, on_stderr=on_stderr)
 
-def _strategy_ABCD(command, param, self):
-    n = param
+def _strategy_ABCD(command, params, on_stderr):
+    n = params[0]
     x, y = {'A': (0, -n), 'B': (0, n), 'C': (n, 0), 'D': (-n, 0)}[command]
-    winterm.cursor_adjust(x, y, on_stderr=self.on_stderr)
+    winterm.cursor_adjust(x, y, on_stderr=on_stderr)
 
 WIN32_STRATEGIES = {
     'm': _strategy_m,
@@ -258,7 +259,4 @@ WIN32_STRATEGIES = {
 
 def call_win32(self, command, params):
     if command in WIN32_STRATEGIES:
-        if command in 'ABCD':
-            WIN32_STRATEGIES[command](command, params[0], self)
-        else:
-            WIN32_STRATEGIES[command](params[0], self)
+        WIN32_STRATEGIES[command](command, params, self.on_stderr)

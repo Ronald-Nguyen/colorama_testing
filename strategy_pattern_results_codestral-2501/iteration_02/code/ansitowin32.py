@@ -89,6 +89,7 @@ class AnsiToWin32:
         self.on_stderr = self.wrapped is sys.stderr
 
     def should_wrap(self):
+
         return self.convert or self.strip or self.autoreset
 
     def get_win32_calls(self):
@@ -151,6 +152,7 @@ class AnsiToWin32:
             self.wrapped.write(Style.RESET_ALL)
 
     def write_and_convert(self, text):
+
         cursor = 0
         text = self.convert_osc(text)
         for match in self.ANSI_CSI_RE.finditer(text):
@@ -182,6 +184,7 @@ class AnsiToWin32:
                     params = (0,)
                 elif command in 'ABCD':
                     params = (1,)
+
         return params
 
     def call_win32(self, command, params):
@@ -219,30 +222,30 @@ class AnsiToWin32:
     def flush(self):
         self.wrapped.flush()
 
-def _strategy_m(params, on_stderr, win32_calls):
+def _strategy_m(command, params, on_stderr):
     for param in params:
-        if param in win32_calls:
-            func_args = win32_calls[param]
+        if param in winterm.win32_calls:
+            func_args = winterm.win32_calls[param]
             func = func_args[0]
             args = func_args[1:]
             kwargs = dict(on_stderr=on_stderr)
             func(*args, **kwargs)
 
-def _strategy_J(params, on_stderr, winterm):
+def _strategy_J(command, params, on_stderr):
     winterm.erase_screen(params[0], on_stderr=on_stderr)
 
-def _strategy_K(params, on_stderr, winterm):
+def _strategy_K(command, params, on_stderr):
     winterm.erase_line(params[0], on_stderr=on_stderr)
 
-def _strategy_Hf(params, on_stderr, winterm):
+def _strategy_Hf(command, params, on_stderr):
     winterm.set_cursor_position(params, on_stderr=on_stderr)
 
-def _strategy_ABCD(params, on_stderr, winterm):
+def _strategy_ABCD(command, params, on_stderr):
     n = params[0]
     x, y = {'A': (0, -n), 'B': (0, n), 'C': (n, 0), 'D': (-n, 0)}[command]
     winterm.cursor_adjust(x, y, on_stderr=on_stderr)
 
-COMMAND_STRATEGIES = {
+WIN32_STRATEGIES = {
     'm': _strategy_m,
     'J': _strategy_J,
     'K': _strategy_K,
@@ -254,144 +257,6 @@ COMMAND_STRATEGIES = {
     'D': _strategy_ABCD,
 }
 
-class AnsiToWin32:
-
-    ANSI_CSI_RE = re.compile('\001?\033\\[((?:\\d|;)*)([a-zA-Z])\002?')
-    ANSI_OSC_RE = re.compile('\001?\033\\]([^\a]*)(\a)\002?')
-
-    def __init__(self, wrapped, convert=None, strip=None, autoreset=False):
-        self.wrapped = wrapped
-        self.autoreset = autoreset
-        self.stream = StreamWrapper(wrapped, self)
-        on_windows = os.name == 'nt'
-        conversion_supported = on_windows and winapi_test()
-        try:
-            fd = wrapped.fileno()
-        except Exception:
-            fd = -1
-        system_has_native_ansi = not on_windows or enable_vt_processing(fd)
-        have_tty = not self.stream.closed and self.stream.isatty()
-        need_conversion = conversion_supported and not system_has_native_ansi
-        if strip is None:
-            strip = need_conversion or not have_tty
-        self.strip = strip
-        if convert is None:
-            convert = need_conversion and have_tty
-        self.convert = convert
-        self.win32_calls = self.get_win32_calls()
-        self.on_stderr = self.wrapped is sys.stderr
-
-    def should_wrap(self):
-        return self.convert or self.strip or self.autoreset
-
-    def get_win32_calls(self):
-        if self.convert and winterm:
-            return {
-                AnsiStyle.RESET_ALL: (winterm.reset_all, ),
-                AnsiStyle.BRIGHT: (winterm.style, WinStyle.BRIGHT),
-                AnsiStyle.DIM: (winterm.style, WinStyle.NORMAL),
-                AnsiStyle.NORMAL: (winterm.style, WinStyle.NORMAL),
-                AnsiFore.BLACK: (winterm.fore, WinColor.BLACK),
-                AnsiFore.RED: (winterm.fore, WinColor.RED),
-                AnsiFore.GREEN: (winterm.fore, WinColor.GREEN),
-                AnsiFore.YELLOW: (winterm.fore, WinColor.YELLOW),
-                AnsiFore.BLUE: (winterm.fore, WinColor.BLUE),
-                AnsiFore.MAGENTA: (winterm.fore, WinColor.MAGENTA),
-                AnsiFore.CYAN: (winterm.fore, WinColor.CYAN),
-                AnsiFore.WHITE: (winterm.fore, WinColor.GREY),
-                AnsiFore.RESET: (winterm.fore, ),
-                AnsiFore.LIGHTBLACK_EX: (winterm.fore, WinColor.BLACK, True),
-                AnsiFore.LIGHTRED_EX: (winterm.fore, WinColor.RED, True),
-                AnsiFore.LIGHTGREEN_EX: (winterm.fore, WinColor.GREEN, True),
-                AnsiFore.LIGHTYELLOW_EX: (winterm.fore, WinColor.YELLOW, True),
-                AnsiFore.LIGHTBLUE_EX: (winterm.fore, WinColor.BLUE, True),
-                AnsiFore.LIGHTMAGENTA_EX: (winterm.fore, WinColor.MAGENTA, True),
-                AnsiFore.LIGHTCYAN_EX: (winterm.fore, WinColor.CYAN, True),
-                AnsiFore.LIGHTWHITE_EX: (winterm.fore, WinColor.GREY, True),
-                AnsiBack.BLACK: (winterm.back, WinColor.BLACK),
-                AnsiBack.RED: (winterm.back, WinColor.RED),
-                AnsiBack.GREEN: (winterm.back, WinColor.GREEN),
-                AnsiBack.YELLOW: (winterm.back, WinColor.YELLOW),
-                AnsiBack.BLUE: (winterm.back, WinColor.BLUE),
-                AnsiBack.MAGENTA: (winterm.back, WinColor.MAGENTA),
-                AnsiBack.CYAN: (winterm.back, WinColor.CYAN),
-                AnsiBack.WHITE: (winterm.back, WinColor.GREY),
-                AnsiBack.RESET: (winterm.back, ),
-                AnsiBack.LIGHTBLACK_EX: (winterm.back, WinColor.BLACK, True),
-                AnsiBack.LIGHTRED_EX: (winterm.back, WinColor.RED, True),
-                AnsiBack.LIGHTGREEN_EX: (winterm.back, WinColor.GREEN, True),
-                AnsiBack.LIGHTYELLOW_EX: (winterm.back, WinColor.YELLOW, True),
-                AnsiBack.LIGHTBLUE_EX: (winterm.back, WinColor.BLUE, True),
-                AnsiBack.LIGHTMAGENTA_EX: (winterm.back, WinColor.MAGENTA, True),
-                AnsiBack.LIGHTCYAN_EX: (winterm.back, WinColor.CYAN, True),
-                AnsiBack.LIGHTWHITE_EX: (winterm.back, WinColor.GREY, True),
-            }
-        return dict()
-
-    def write(self, text):
-        if self.strip or self.convert:
-            self.write_and_convert(text)
-        else:
-            self.wrapped.write(text)
-            self.wrapped.flush()
-        if self.autoreset:
-            self.reset_all()
-
-    def reset_all(self):
-        if self.convert:
-            self.call_win32('m', (0,))
-        elif not self.strip and not self.stream.closed:
-            self.wrapped.write(Style.RESET_ALL)
-
-    def write_and_convert(self, text):
-        cursor = 0
-        text = self.convert_osc(text)
-        for match in self.ANSI_CSI_RE.finditer(text):
-            start, end = match.span()
-            self.write_plain_text(text, cursor, start)
-            self.convert_ansi(*match.groups())
-            cursor = end
-        self.write_plain_text(text, cursor, len(text))
-
-    def write_plain_text(self, text, start, end):
-        if start < end:
-            self.wrapped.write(text[start:end])
-            self.wrapped.flush()
-
-    def convert_ansi(self, paramstring, command):
-        if self.convert:
-            params = self.extract_params(command, paramstring)
-            self.call_win32(command, params)
-
-    def extract_params(self, command, paramstring):
-        if command in 'Hf':
-            params = tuple(int(p) if len(p) != 0 else 1 for p in paramstring.split(';'))
-            while len(params) < 2:
-                params = params + (1,)
-        else:
-            params = tuple(int(p) for p in paramstring.split(';') if len(p) != 0)
-            if len(params) == 0:
-                if command in 'JKm':
-                    params = (0,)
-                elif command in 'ABCD':
-                    params = (1,)
-        return params
-
-    def call_win32(self, command, params):
-        if command in COMMAND_STRATEGIES:
-            COMMAND_STRATEGIES[command](params, self.on_stderr, self.win32_calls if command == 'm' else winterm)
-
-    def convert_osc(self, text):
-        for match in self.ANSI_OSC_RE.finditer(text):
-            start, end = match.span()
-            text = text[:start] + text[end:]
-            paramstring, command = match.groups()
-            if command == BEL:
-                if paramstring.count(";") == 1:
-                    params = paramstring.split(";")
-                    if params[0] in '02':
-                        winterm.set_title(params[1])
-        return text
-
-    def flush(self):
-        self.wrapped.flush()
+def call_win32(self, command, params):
+    if command in WIN32_STRATEGIES:
+        WIN32_STRATEGIES[command](command, params, self.on_stderr)

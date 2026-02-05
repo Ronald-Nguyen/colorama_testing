@@ -89,6 +89,7 @@ class AnsiToWin32:
         self.on_stderr = self.wrapped is sys.stderr
 
     def should_wrap(self):
+
         return self.convert or self.strip or self.autoreset
 
     def get_win32_calls(self):
@@ -151,6 +152,7 @@ class AnsiToWin32:
             self.wrapped.write(Style.RESET_ALL)
 
     def write_and_convert(self, text):
+
         cursor = 0
         text = self.convert_osc(text)
         for match in self.ANSI_CSI_RE.finditer(text):
@@ -182,6 +184,7 @@ class AnsiToWin32:
                     params = (0,)
                 elif command in 'ABCD':
                     params = (1,)
+
         return params
 
     def call_win32(self, command, params):
@@ -219,7 +222,7 @@ class AnsiToWin32:
     def flush(self):
         self.wrapped.flush()
 
-def _strategy_m(command, params, on_stderr):
+def _strategy_m(params, on_stderr):
     for param in params:
         if param in self.win32_calls:
             func_args = self.win32_calls[param]
@@ -228,13 +231,13 @@ def _strategy_m(command, params, on_stderr):
             kwargs = dict(on_stderr=on_stderr)
             func(*args, **kwargs)
 
-def _strategy_J(command, params, on_stderr):
+def _strategy_J(params, on_stderr):
     winterm.erase_screen(params[0], on_stderr=on_stderr)
 
-def _strategy_K(command, params, on_stderr):
+def _strategy_K(params, on_stderr):
     winterm.erase_line(params[0], on_stderr=on_stderr)
 
-def _strategy_Hf(command, params, on_stderr):
+def _strategy_Hf(params, on_stderr):
     winterm.set_cursor_position(params, on_stderr=on_stderr)
 
 def _strategy_ABCD(command, params, on_stderr):
@@ -242,7 +245,7 @@ def _strategy_ABCD(command, params, on_stderr):
     x, y = {'A': (0, -n), 'B': (0, n), 'C': (n, 0), 'D': (-n, 0)}[command]
     winterm.cursor_adjust(x, y, on_stderr=on_stderr)
 
-COMMAND_STRATEGIES = {
+WIN32_STRATEGIES = {
     'm': _strategy_m,
     'J': _strategy_J,
     'K': _strategy_K,
@@ -255,5 +258,5 @@ COMMAND_STRATEGIES = {
 }
 
 def call_win32(self, command, params):
-    if command in COMMAND_STRATEGIES:
-        COMMAND_STRATEGIES[command](command, params, self.on_stderr)
+    if command in WIN32_STRATEGIES:
+        WIN32_STRATEGIES[command](params, self.on_stderr)

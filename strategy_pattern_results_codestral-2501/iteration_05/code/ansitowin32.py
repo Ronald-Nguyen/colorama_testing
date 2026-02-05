@@ -207,6 +207,45 @@ class AnsiToWin32:
             x, y = {'A': (0, -n), 'B': (0, n), 'C': (n, 0), 'D': (-n, 0)}[command]
             winterm.cursor_adjust(x, y, on_stderr=self.on_stderr)
 
+    def _strategy_m(self, params):
+        for param in params:
+            if param in self.win32_calls:
+                func_args = self.win32_calls[param]
+                func = func_args[0]
+                args = func_args[1:]
+                kwargs = dict(on_stderr=self.on_stderr)
+                func(*args, **kwargs)
+
+    def _strategy_J(self, params):
+        winterm.erase_screen(params[0], on_stderr=self.on_stderr)
+
+    def _strategy_K(self, params):
+        winterm.erase_line(params[0], on_stderr=self.on_stderr)
+
+    def _strategy_Hf(self, params):
+        winterm.set_cursor_position(params, on_stderr=self.on_stderr)
+
+    def _strategy_ABCD(self, params):
+        n = params[0]
+        x, y = {'A': (0, -n), 'B': (0, n), 'C': (n, 0), 'D': (-n, 0)}[command]
+        winterm.cursor_adjust(x, y, on_stderr=self.on_stderr)
+
+    COMMAND_STRATEGIES = {
+        'm': _strategy_m,
+        'J': _strategy_J,
+        'K': _strategy_K,
+        'H': _strategy_Hf,
+        'f': _strategy_Hf,
+        'A': _strategy_ABCD,
+        'B': _strategy_ABCD,
+        'C': _strategy_ABCD,
+        'D': _strategy_ABCD,
+    }
+
+    def call_win32(self, command, params):
+        if command in self.COMMAND_STRATEGIES:
+            self.COMMAND_STRATEGIES[command](self, params)
+
     def convert_osc(self, text):
         for match in self.ANSI_OSC_RE.finditer(text):
             start, end = match.span()
@@ -221,42 +260,3 @@ class AnsiToWin32:
 
     def flush(self):
         self.wrapped.flush()
-
-def _strategy_m(params, on_stderr):
-    for param in params:
-        if param in winterm.win32_calls:
-            func_args = winterm.win32_calls[param]
-            func = func_args[0]
-            args = func_args[1:]
-            kwargs = dict(on_stderr=on_stderr)
-            func(*args, **kwargs)
-
-def _strategy_J(params, on_stderr):
-    winterm.erase_screen(params[0], on_stderr=on_stderr)
-
-def _strategy_K(params, on_stderr):
-    winterm.erase_line(params[0], on_stderr=on_stderr)
-
-def _strategy_Hf(params, on_stderr):
-    winterm.set_cursor_position(params, on_stderr=on_stderr)
-
-def _strategy_ABCD(command, params, on_stderr):
-    n = params[0]
-    x, y = {'A': (0, -n), 'B': (0, n), 'C': (n, 0), 'D': (-n, 0)}[command]
-    winterm.cursor_adjust(x, y, on_stderr=on_stderr)
-
-WIN32_STRATEGIES = {
-    'm': _strategy_m,
-    'J': _strategy_J,
-    'K': _strategy_K,
-    'H': _strategy_Hf,
-    'f': _strategy_Hf,
-    'A': lambda command, params, on_stderr: _strategy_ABCD(command, params, on_stderr),
-    'B': lambda command, params, on_stderr: _strategy_ABCD(command, params, on_stderr),
-    'C': lambda command, params, on_stderr: _strategy_ABCD(command, params, on_stderr),
-    'D': lambda command, params, on_stderr: _strategy_ABCD(command, params, on_stderr),
-}
-
-def call_win32(self, command, params):
-    if command in WIN32_STRATEGIES:
-        WIN32_STRATEGIES[command](command, params, self.on_stderr)

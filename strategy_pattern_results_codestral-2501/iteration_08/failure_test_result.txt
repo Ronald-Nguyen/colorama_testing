@@ -1,5 +1,5 @@
-Iteration 1
-Timestamp: 2026-02-05T14:59:50.439408
+Iteration 8
+Timestamp: 2026-02-05T18:25:51.203224
 Success: False
 
 ============================================================
@@ -36,22 +36,19 @@ self = <colorama.tests.ansitowin32_test.AnsiToWin32Test testMethod=testCallWin32
 
 colorama\tests\ansitowin32_test.py:219: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
-colorama\ansitowin32.py:245: in call_win32
-    self.COMMAND_STRATEGIES[command](params, command)
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
-self = (3, 1, 99, 2), params = 'm'
+self = <colorama.ansitowin32.AnsiToWin32 object at 0x00000208703478C0>
+command = 'm', params = (3, 1, 99, 2)
 
-    def _strategy_m(self, params):
-        for param in params:
->           if param in self.win32_calls:
-                        ^^^^^^^^^^^^^^^^
-E           AttributeError: 'tuple' object has no attribute 'win32_calls'
+    def call_win32(self, command, params):
+        if command in self.WIN32_STRATEGIES:
+>           self.WIN32_STRATEGIES[command](params)
+E           TypeError: AnsiToWin32._strategy_m() missing 1 required positional argument: 'params'
 
-colorama\ansitowin32.py:210: AttributeError
+colorama\ansitowin32.py:247: TypeError
 =========================== short test summary info ===========================
 FAILED colorama/tests/ansitowin32_test.py::AnsiToWin32Test::testCallWin32UsesLookup
-================== 1 failed, 43 passed, 14 skipped in 0.59s ===================
+================== 1 failed, 43 passed, 14 skipped in 0.63s ===================
 
 ============================================================
 STDERR:
