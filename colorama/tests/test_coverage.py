@@ -302,7 +302,7 @@ def test_win32_api_wrappers_and_console_info():
 
         def fake_fill_attribute(_handle, _attr, length, _start, num_written):
             num_written._obj.value = length.value
-            return length.value
+            return 1
 
         fake_win32._FillConsoleOutputCharacterA = fake_fill_character
         fake_win32._FillConsoleOutputAttribute = fake_fill_attribute
@@ -332,7 +332,7 @@ def test_win32_api_wrappers_and_console_info():
             fake_win32.FillConsoleOutputAttribute(
                 fake_win32.STDOUT, 7, 5, fake_win32.COORD(0, 0)
             ),
-            5,
+            1,
         )
         fake_win32.SetConsoleTitle("title")
         assert_equal(fake_win32.GetConsoleMode(123), 1)
