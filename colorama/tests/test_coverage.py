@@ -1,3 +1,4 @@
+import builtins
 import contextlib
 import ctypes
 import importlib
@@ -59,27 +60,97 @@ def fake_windows_modules():
                 delattr(ctypes, "WinError")
         else:
             setattr(ctypes, "WinError", original_winerror)
+        # Restore modules with the original ctypes state.
         importlib.reload(win32)
         importlib.reload(winterm)
 
 
+@contextlib.contextmanager
+def reload_win32_without_windll():
+    original_windll = getattr(ctypes, "WinDLL", None)
+    had_windll = hasattr(ctypes, "WinDLL")
+    if had_windll:
+        delattr(ctypes, "WinDLL")
+    try:
+        reloaded_win32 = importlib.reload(win32)
+        yield reloaded_win32
+    finally:
+        if had_windll:
+            setattr(ctypes, "WinDLL", original_windll)
+        importlib.reload(win32)
+
+
+@contextlib.contextmanager
+def reload_winterm_without_msvcrt():
+    original_import = builtins.__import__
+
+    def fake_import(name, *args, **kwargs):
+        if name == "msvcrt":
+            raise ImportError("msvcrt unavailable")
+        return original_import(name, *args, **kwargs)
+
+    builtins.__import__ = fake_import
+    try:
+        reloaded = importlib.reload(winterm)
+        yield reloaded
+    finally:
+        builtins.__import__ = original_import
+        importlib.reload(winterm)
+
+
+def assert_equal(actual, expected, message=""):
+    if actual != expected:
+        raise AssertionError(message or f"{actual!r} != {expected!r}")
+
+
+def assert_in(member, container, message=""):
+    if member not in container:
+        raise AssertionError(message or f"{member!r} not found in container")
+
+
+def assert_is(actual, expected, message=""):
+    if actual is not expected:
+        raise AssertionError(message or f"{actual!r} is not {expected!r}")
+
+
+def assert_true(condition, message=""):
+    if not condition:
+        if callable(message):
+            message = message()
+        raise AssertionError(message or "Expected condition to be true")
+
+
+def test_reload_modules_for_coverage():
+    colorama_pkg = importlib.import_module("colorama")
+    reloaded_colorama = importlib.reload(colorama_pkg)
+    reloaded_ansi = importlib.reload(ansi)
+    reloaded_initialise = importlib.reload(initialise)
+    assert_true(hasattr(reloaded_colorama, "__version__"))
+    assert_true(hasattr(reloaded_ansi, "Fore"))
+    assert_true(hasattr(reloaded_initialise, "init"))
+    with reload_win32_without_windll() as reloaded_win32:
+        assert_is(reloaded_win32.windll, None)
+        assert_true(callable(reloaded_win32.SetConsoleTextAttribute))
+        assert_true(callable(reloaded_win32.winapi_test))
+
+
 def test_ansi_helpers_and_cursor():
-    assert ansi.code_to_chars(5) == "\033[5m"
-    assert ansi.set_title("title") == "\033]2;title\a"
-    assert ansi.clear_screen(1) == "\033[1J"
-    assert ansi.clear_line(1) == "\033[1K"
+    assert_equal(ansi.code_to_chars(5), "\033[5m")
+    assert_equal(ansi.set_title("title"), "\033]2;title\a")
+    assert_equal(ansi.clear_screen(1), "\033[1J")
+    assert_equal(ansi.clear_line(1), "\033[1K")
     cursor = ansi.AnsiCursor()
-    assert cursor.UP(2) == "\033[2A"
-    assert cursor.DOWN(3) == "\033[3B"
-    assert cursor.FORWARD(4) == "\033[4C"
-    assert cursor.BACK(5) == "\033[5D"
-    assert cursor.POS(2, 3) == "\033[3;2H"
+    assert_equal(cursor.UP(2), "\033[2A")
+    assert_equal(cursor.DOWN(3), "\033[3B")
+    assert_equal(cursor.FORWARD(4), "\033[4C")
+    assert_equal(cursor.BACK(5), "\033[5D")
+    assert_equal(cursor.POS(2, 3), "\033[3;2H")
 
 
 def test_ansitowin32_state_and_calls():
     wrapper = ansitowin32.StreamWrapper(Mock(), Mock())
     wrapper.__setstate__({"value": 1})
-    assert wrapper.__getstate__()["value"] == 1
+    assert_equal(wrapper.__getstate__()["value"], 1)
 
     wrapped = Mock()
     wrapped.closed = False
@@ -94,8 +165,8 @@ def test_ansitowin32_state_and_calls():
     stream.reset_all()
     stream.call_win32.assert_called_with("m", (0,))
 
-    assert stream.extract_params("H", "2") == (2, 1)
-    assert stream.extract_params("A", "") == (1,)
+    assert_equal(stream.extract_params("H", "2"), (2, 1))
+    assert_equal(stream.extract_params("A", ""), (1,))
 
     call_wrapped = Mock()
     call_wrapped.closed = False
@@ -112,7 +183,7 @@ def test_ansitowin32_state_and_calls():
     with patch.object(ansitowin32, "winterm", Mock()):
         stream.convert = True
         calls = stream.get_win32_calls()
-        assert ansitowin32.AnsiStyle.RESET_ALL in calls
+        assert_in(ansitowin32.AnsiStyle.RESET_ALL, calls)
 
     stream.wrapped = Mock()
     stream.flush()
@@ -124,7 +195,7 @@ def test_ansitowin32_initializes_winterm_with_windll():
 
     with patch.object(win32, "windll", object()), patch.object(winterm, "WinTerm", DummyWinTerm):
         reloaded = importlib.reload(ansitowin32)
-        assert isinstance(reloaded.winterm, DummyWinTerm)
+        assert_true(isinstance(reloaded.winterm, DummyWinTerm))
     importlib.reload(ansitowin32)
 
 
@@ -178,8 +249,8 @@ def test_initialise_paths():
     sys.stdout = saved_stdout
     sys.stderr = saved_stderr
     initialise.reinit()
-    assert sys.stdout is dummy_stdout
-    assert sys.stderr is dummy_stderr
+    assert_is(sys.stdout, dummy_stdout)
+    assert_is(sys.stderr, dummy_stderr)
     sys.stdout = saved_stdout
     sys.stderr = saved_stderr
 
@@ -199,7 +270,7 @@ def test_initialise_paths():
             return True
 
     with patch("colorama.initialise.AnsiToWin32", DummyWrapper):
-        assert initialise.wrap_stream("stream", None, None, False, True) == "wrapped"
+        assert_equal(initialise.wrap_stream("stream", None, None, False, True), "wrapped")
 
 
 def test_just_fix_windows_console_paths():
@@ -230,9 +301,9 @@ def test_just_fix_windows_console_paths():
             new_stderr = Mock(convert=True)
             with patch("colorama.initialise.AnsiToWin32", side_effect=[new_stdout, new_stderr]):
                 initialise.just_fix_windows_console()
-            assert sys.stdout is new_stdout
-            assert sys.stderr is new_stderr
-            assert initialise.fixed_windows_console
+            assert_is(sys.stdout, new_stdout)
+            assert_is(sys.stderr, new_stderr)
+            assert_true(initialise.fixed_windows_console)
     finally:
         sys.stdout = saved_stdout
         sys.stderr = saved_stderr
@@ -253,7 +324,7 @@ def test_win32_api_wrappers_and_console_info():
         info.srWindow.Right = 4
         info.dwMaximumWindowSize.X = 30
         info.dwMaximumWindowSize.Y = 40
-        assert str(info)
+        assert_true(str(info))
 
         fake_win32._GetStdHandle = Mock(side_effect=lambda handle: handle)
 
@@ -295,27 +366,27 @@ def test_win32_api_wrappers_and_console_info():
         fake_win32._GetConsoleMode = fake_get_mode
         fake_win32._SetConsoleMode = Mock(return_value=True)
 
-        assert fake_win32._winapi_test(123)
-        assert fake_win32.winapi_test()
+        assert_true(fake_win32._winapi_test(123))
+        assert_true(fake_win32.winapi_test())
         csbi = fake_win32.GetConsoleScreenBufferInfo(fake_win32.STDOUT)
-        assert csbi.dwSize.X == 10
-        assert fake_win32.SetConsoleTextAttribute(fake_win32.STDOUT, 7)
+        assert_equal(csbi.dwSize.X, 10)
+        assert_true(fake_win32.SetConsoleTextAttribute(fake_win32.STDOUT, 7))
         fake_win32.SetConsoleCursorPosition(fake_win32.STDOUT, (2, 3))
-        assert fake_win32.SetConsoleCursorPosition(fake_win32.STDOUT, (0, 0)) is None
-        assert (
+        assert_is(fake_win32.SetConsoleCursorPosition(fake_win32.STDOUT, (0, 0)), None)
+        assert_equal(
             fake_win32.FillConsoleOutputCharacter(
                 fake_win32.STDOUT, "X", 5, fake_win32.COORD(0, 0)
-            )
-            == 5
+            ),
+            5,
         )
-        assert (
+        assert_equal(
             fake_win32.FillConsoleOutputAttribute(
                 fake_win32.STDOUT, 7, 5, fake_win32.COORD(0, 0)
-            )
-            == 1
+            ),
+            1,
         )
         fake_win32.SetConsoleTitle("title")
-        assert fake_win32.GetConsoleMode(123) == 1
+        assert_equal(fake_win32.GetConsoleMode(123), 1)
         fake_win32.SetConsoleMode(123, 1)
 
         fake_win32._GetConsoleMode = lambda _handle, _mode_ptr: 0
@@ -326,3 +397,78 @@ def test_win32_api_wrappers_and_console_info():
         with pytest.raises(OSError):
             fake_win32.SetConsoleMode(123, 1)
 
+
+def test_winterm_behavior_and_vt_processing():
+    if winterm.get_osfhandle.__module__ == "msvcrt":
+        handle = winterm.get_osfhandle(1)
+        assert_true(
+            isinstance(handle, int),
+            lambda: f"Expected int handle, got {type(handle)!r}",
+        )
+    else:
+        with pytest.raises(OSError):
+            winterm.get_osfhandle(1)
+    assert_is(winterm.enable_vt_processing(1), False)
+
+    original_import = builtins.__import__
+    with reload_winterm_without_msvcrt() as reloaded:
+        assert_true(builtins.__import__ is not original_import)
+        with pytest.raises(ImportError):
+            builtins.__import__("msvcrt")
+        with pytest.raises(OSError):
+            reloaded.get_osfhandle(1)
+    assert_is(builtins.__import__, original_import)
+
+    with fake_windows_modules() as (fake_win32, fake_winterm):
+        csbi = fake_win32.CONSOLE_SCREEN_BUFFER_INFO()
+        csbi.dwSize.X = 10
+        csbi.dwSize.Y = 5
+        csbi.dwCursorPosition.X = 2
+        csbi.dwCursorPosition.Y = 3
+        csbi.wAttributes = 7
+        csbi.srWindow.Top = 1
+        csbi.srWindow.Left = 1
+        csbi.srWindow.Bottom = 4
+        csbi.srWindow.Right = 5
+        fake_win32.GetConsoleScreenBufferInfo = Mock(return_value=csbi)
+        fake_win32.SetConsoleTextAttribute = Mock()
+        fake_win32.SetConsoleCursorPosition = Mock()
+        fake_win32.FillConsoleOutputCharacter = Mock()
+        fake_win32.FillConsoleOutputAttribute = Mock()
+        fake_win32.SetConsoleTitle = Mock()
+
+        term = fake_winterm.WinTerm()
+        term.fore(light=False)
+        term.fore(light=True)
+        term.back(light=False)
+        term.back(light=True)
+        term.style()
+        term.get_position(fake_win32.STDOUT)
+        term.set_cursor_position()
+        term.set_cursor_position((1, 1), on_stderr=True)
+        term.cursor_adjust(1, 2, on_stderr=True)
+        term.erase_screen(0)
+        term.erase_screen(0, on_stderr=True)
+        term.erase_screen(1)
+        term.erase_screen(2)
+        term.erase_screen(3)
+        term.erase_line(0)
+        term.erase_line(0, on_stderr=True)
+        term.erase_line(1)
+        term.erase_line(2)
+        term.erase_line(3)
+        term.set_title("title")
+
+        fake_win32.winapi_test = Mock(return_value=True)
+        fake_winterm.get_osfhandle = Mock(return_value=123)
+        modes = [0, fake_win32.ENABLE_VIRTUAL_TERMINAL_PROCESSING]
+
+        def fake_get_console_mode(_handle):
+            return modes.pop(0)
+
+        fake_win32.GetConsoleMode = Mock(side_effect=fake_get_console_mode)
+        fake_win32.SetConsoleMode = Mock()
+        assert_is(fake_winterm.enable_vt_processing(1), True)
+
+        fake_winterm.get_osfhandle = Mock(side_effect=OSError("bad handle"))
+        assert_is(fake_winterm.enable_vt_processing(1), False)

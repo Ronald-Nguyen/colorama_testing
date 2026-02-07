@@ -1,0 +1,7 @@
+[run]
+omit =
+    colorama/tests/*
+
+[report]
+omit =
+    colorama/tests/*
