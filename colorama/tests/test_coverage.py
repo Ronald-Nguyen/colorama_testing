@@ -8,7 +8,6 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-import colorama as colorama_pkg
 from colorama import ansi
 from colorama import ansitowin32
 from colorama import initialise
@@ -122,10 +121,10 @@ def assert_true(condition, message=""):
 
 
 def test_reload_modules_for_coverage():
-    reloaded_pkg = importlib.reload(colorama_pkg)
+    colorama_module = importlib.reload(importlib.import_module("colorama"))
     reloaded_ansi = importlib.reload(ansi)
     reloaded_init = importlib.reload(initialise)
-    assert_true(hasattr(reloaded_pkg, "__version__"))
+    assert_true(hasattr(colorama_module, "__version__"))
     assert_true(hasattr(reloaded_ansi, "Fore"))
     assert_true(hasattr(reloaded_init, "init"))
     with reload_win32_without_windll() as reloaded_win32:
