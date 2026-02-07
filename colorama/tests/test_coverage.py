@@ -8,6 +8,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
+import colorama as colorama_pkg
 from colorama import ansi
 from colorama import ansitowin32
 from colorama import initialise
@@ -66,6 +67,21 @@ def fake_windows_modules():
 
 
 @contextlib.contextmanager
+def reload_win32_without_windll():
+    original_windll = getattr(ctypes, "WinDLL", None)
+    had_windll = hasattr(ctypes, "WinDLL")
+    if had_windll:
+        delattr(ctypes, "WinDLL")
+    try:
+        reloaded = importlib.reload(win32)
+        yield reloaded
+    finally:
+        if had_windll:
+            setattr(ctypes, "WinDLL", original_windll)
+        importlib.reload(win32)
+
+
+@contextlib.contextmanager
 def reload_winterm_without_msvcrt():
     original_import = builtins.__import__
 
@@ -103,6 +119,19 @@ def assert_true(condition, message=""):
         if callable(message):
             message = message()
         raise AssertionError(message or "Expected condition to be true")
+
+
+def test_reload_modules_for_coverage():
+    reloaded_pkg = importlib.reload(colorama_pkg)
+    reloaded_ansi = importlib.reload(ansi)
+    reloaded_init = importlib.reload(initialise)
+    assert_true(hasattr(reloaded_pkg, "__version__"))
+    assert_true(hasattr(reloaded_ansi, "Fore"))
+    assert_true(hasattr(reloaded_init, "init"))
+    with reload_win32_without_windll() as reloaded_win32:
+        assert_is(reloaded_win32.windll, None)
+        assert_true(callable(reloaded_win32.SetConsoleTextAttribute))
+        assert_true(callable(reloaded_win32.winapi_test))
 
 
 def test_ansi_helpers_and_cursor():
