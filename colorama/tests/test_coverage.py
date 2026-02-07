@@ -381,9 +381,12 @@ def test_winterm_behavior_and_vt_processing():
             winterm.get_osfhandle(1)
     assert_is(winterm.enable_vt_processing(1), False)
 
+    original_import = builtins.__import__
     with reload_winterm_without_msvcrt() as reloaded:
+        assert_true(builtins.__import__ is not original_import)
         with pytest.raises(OSError):
             reloaded.get_osfhandle(1)
+    assert_is(builtins.__import__, original_import)
 
     with fake_windows_modules() as (fake_win32, fake_winterm):
         csbi = fake_win32.CONSOLE_SCREEN_BUFFER_INFO()
