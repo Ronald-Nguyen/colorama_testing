@@ -3,7 +3,7 @@ from pyexpat import model
 import re
 import shutil
 import argparse
-import subprocess
+import subprocess  # nosec
 from pathlib import Path
 from datetime import datetime
 from unittest import result
@@ -157,7 +157,7 @@ def apply_changes(project_dir: Path | str, files: dict[str, str]) -> None:
 def run_pytest():
     """Führt pytest aus und gibt das Ergebnis zurück."""
     try:
-        result = subprocess.run(
+        result = subprocess.run(  # nosec
             ['pytest'], 
             capture_output=True, 
             text=True, 
