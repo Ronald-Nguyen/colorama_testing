@@ -1,3 +1,4 @@
+import builtins
 import contextlib
 import ctypes
 import importlib
@@ -60,6 +61,24 @@ def fake_windows_modules():
         else:
             setattr(ctypes, "WinError", original_winerror)
         importlib.reload(win32)
+        importlib.reload(winterm)
+
+
+@contextlib.contextmanager
+def reload_winterm_without_msvcrt():
+    original_import = builtins.__import__
+
+    def fake_import(name, *args, **kwargs):
+        if name == "msvcrt":
+            raise ImportError("msvcrt unavailable")
+        return original_import(name, *args, **kwargs)
+
+    builtins.__import__ = fake_import
+    try:
+        reloaded = importlib.reload(winterm)
+        yield reloaded
+    finally:
+        builtins.__import__ = original_import
         importlib.reload(winterm)
 
 
@@ -348,9 +367,16 @@ def test_win32_api_wrappers_and_console_info():
 
 
 def test_winterm_behavior_and_vt_processing():
-    with pytest.raises(OSError):
-        winterm.get_osfhandle(1)
+    if winterm.get_osfhandle.__module__ == "msvcrt":
+        assert_true(winterm.get_osfhandle(1) is not None)
+    else:
+        with pytest.raises(OSError):
+            winterm.get_osfhandle(1)
     assert_is(winterm.enable_vt_processing(1), False)
+
+    with reload_winterm_without_msvcrt() as reloaded:
+        with pytest.raises(OSError):
+            reloaded.get_osfhandle(1)
 
     with fake_windows_modules() as (fake_win32, fake_winterm):
         csbi = fake_win32.CONSOLE_SCREEN_BUFFER_INFO()
