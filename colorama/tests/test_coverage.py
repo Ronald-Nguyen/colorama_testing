@@ -72,8 +72,8 @@ def reload_win32_without_windll():
     if had_windll:
         delattr(ctypes, "WinDLL")
     try:
-        reloaded = importlib.reload(win32)
-        yield reloaded
+        reloaded_win32 = importlib.reload(win32)
+        yield reloaded_win32
     finally:
         if had_windll:
             setattr(ctypes, "WinDLL", original_windll)
