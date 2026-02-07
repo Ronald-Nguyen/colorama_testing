@@ -368,7 +368,8 @@ def test_win32_api_wrappers_and_console_info():
 
 def test_winterm_behavior_and_vt_processing():
     if winterm.get_osfhandle.__module__ == "msvcrt":
-        assert_true(winterm.get_osfhandle(1) is not None)
+        handle = winterm.get_osfhandle(1)
+        assert_true(isinstance(handle, int))
     else:
         with pytest.raises(OSError):
             winterm.get_osfhandle(1)
