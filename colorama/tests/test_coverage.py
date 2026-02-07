@@ -121,13 +121,13 @@ def assert_true(condition, message=""):
 
 
 def test_reload_modules_for_coverage():
-    colorama_module = importlib.import_module("colorama")
-    reloaded_pkg = importlib.reload(colorama_module)
+    colorama_pkg = importlib.import_module("colorama")
+    reloaded_colorama = importlib.reload(colorama_pkg)
     reloaded_ansi = importlib.reload(ansi)
-    reloaded_init = importlib.reload(initialise)
-    assert_true(hasattr(reloaded_pkg, "__version__"))
+    reloaded_initialise = importlib.reload(initialise)
+    assert_true(hasattr(reloaded_colorama, "__version__"))
     assert_true(hasattr(reloaded_ansi, "Fore"))
-    assert_true(hasattr(reloaded_init, "init"))
+    assert_true(hasattr(reloaded_initialise, "init"))
     with reload_win32_without_windll() as reloaded_win32:
         assert_is(reloaded_win32.windll, None)
         assert_true(callable(reloaded_win32.SetConsoleTextAttribute))
