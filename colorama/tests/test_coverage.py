@@ -60,6 +60,7 @@ def fake_windows_modules():
                 delattr(ctypes, "WinError")
         else:
             setattr(ctypes, "WinError", original_winerror)
+        # Restore modules with the original ctypes state.
         importlib.reload(win32)
         importlib.reload(winterm)
 
@@ -99,6 +100,8 @@ def assert_is(actual, expected, message=""):
 
 def assert_true(condition, message=""):
     if not condition:
+        if callable(message):
+            message = message()
         raise AssertionError(message or "Expected condition to be true")
 
 
@@ -369,7 +372,10 @@ def test_win32_api_wrappers_and_console_info():
 def test_winterm_behavior_and_vt_processing():
     if winterm.get_osfhandle.__module__ == "msvcrt":
         handle = winterm.get_osfhandle(1)
-        assert_true(isinstance(handle, int), f"Expected int handle, got {type(handle)!r}")
+        assert_true(
+            isinstance(handle, int),
+            lambda: f"Expected int handle, got {type(handle)!r}",
+        )
     else:
         with pytest.raises(OSError):
             winterm.get_osfhandle(1)
