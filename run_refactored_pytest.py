@@ -7,14 +7,15 @@ import difflib
 from datetime import datetime
 from pathlib import Path
 
-PROJECT_SRC_PATH = Path("src/pluggy")
-REFACTORED_ROOT_PATH = Path("refactoring/rename_results_gemini-3-pro-preview")
-TEST_RESULTS_ROOT = Path("test_results") / REFACTORED_ROOT_PATH
+PROJECT_SRC_PATH = Path("colorama")
+REFACTORING_BASE_PATH = Path("refactoring")
+TEST_RESULTS_BASE = Path("test_results")
 
 ITERATION_PREFIX = "iteration_"
 SUMMARY_FILENAME = "test_results.txt"
 ITERATION_RESULT_FILENAME = "test_result.txt"
 ITERATION_DIFF_FILENAME = "diff.txt"
+OVERALL_SUMMARY_FILENAME = "overall_summary.txt"
 
 
 def get_project_structure(project_dir: Path) -> str:
@@ -25,7 +26,7 @@ def get_project_structure(project_dir: Path) -> str:
             d
             for d in dirs
             if not d.startswith(".")
-            and d not in {"__pycache__", "tests", "pathlib2.egg-info"}
+            and d not in {"__pycache__", "pathlib2.egg-info"}
         ]
         level = root.replace(str(project_dir), "").count(os.sep)
         indent = " " * 2 * level
@@ -38,20 +39,20 @@ def get_project_structure(project_dir: Path) -> str:
 
 
 def backup_project(project_dir: Path, backup_dir: Path) -> None:
-    """Erstellt ein Backup des Projekts."""
+    """Erstellt ein Backup des Projekts INKLUSIVE der Tests."""
     if backup_dir.exists():
         shutil.rmtree(backup_dir)
     shutil.copytree(
         project_dir,
         backup_dir,
         ignore=shutil.ignore_patterns(
-            "__pycache__", "*.pyc", ".git", "test", "tests", "pathlib2.egg-info"
+            "__pycache__", "*.pyc", ".git", "*.egg-info"
         ),
     )
 
 
 def restore_project(backup_dir: Path, project_dir: Path) -> None:
-    """Stellt das Projekt aus dem Backup wieder her"""
+    """Stellt das Projekt aus dem Backup wieder her INKLUSIVE der Tests"""
     backup_dir = Path(backup_dir).resolve()
     project_dir = Path(project_dir).resolve()
 
@@ -71,7 +72,9 @@ def apply_changes(project_dir: Path | str, files: dict[str, str]) -> None:
     for filename, code in files.items():
         file_rel = Path(filename)
 
+        # Überspringe Test-Dateien beim Anwenden der Änderungen
         if any(part == "tests" for part in file_rel.parts):
+            print(f" {filename} (Test-Datei, übersprungen)")
             continue
 
         file_path = (project_dir / file_rel).resolve()
@@ -89,14 +92,27 @@ def apply_changes(project_dir: Path | str, files: dict[str, str]) -> None:
             print(f" Fehler beim Schreiben von {filename}: {e}")
 
 
-def run_pytest():
+def run_pytest(project_dir: Path):
     """Führt pytest aus und gibt das Ergebnis zurück."""
     try:
+        # Führe pytest im Projektverzeichnis aus
         result = subprocess.run(
-            ["pytest"],
+            ["pytest", "tests/", "-v"],
             capture_output=True,
             text=True,
+            cwd=str(project_dir.parent),  # Führe im übergeordneten Verzeichnis aus
         )
+        
+        # Prüfe ob Tests gefunden wurden
+        stdout = result.stdout
+        if "collected 0 items" in stdout or "no tests ran" in stdout:
+            return {
+                "success": False,
+                "stdout": stdout,
+                "stderr": result.stderr + "\nWARNING: Keine Tests gefunden!",
+                "returncode": 5,
+            }
+        
         return {
             "success": result.returncode == 0,
             "stdout": result.stdout,
@@ -182,6 +198,7 @@ def save_iteration_result_files(
 
 
 def should_skip_snapshot_path(relative_path: Path) -> bool:
+    """Prüft ob eine Datei im Snapshot übersprungen werden soll."""
     for part in relative_path.parts:
         if "test" in part.lower():
             return True
@@ -189,6 +206,7 @@ def should_skip_snapshot_path(relative_path: Path) -> bool:
 
 
 def collect_snapshot_files(code_dir: Path) -> dict[str, str]:
+    """Sammelt alle Python-Dateien aus dem Snapshot, OHNE Test-Dateien."""
     files: dict[str, str] = {}
     for root, dirs, filenames in os.walk(code_dir):
         dirs[:] = [d for d in dirs if not d.startswith(".")]
@@ -197,8 +215,11 @@ def collect_snapshot_files(code_dir: Path) -> dict[str, str]:
                 continue
             file_path = Path(root) / filename
             relative_path = file_path.relative_to(code_dir)
+            
+            # Überspringe Test-Dateien beim Sammeln
             if should_skip_snapshot_path(relative_path):
                 continue
+                
             try:
                 files[str(relative_path)] = file_path.read_text(encoding="utf-8")
             except Exception as e:
@@ -214,6 +235,28 @@ def find_iteration_dirs(refactored_root: Path) -> list[Path]:
                 iteration_dirs.append(Path(root) / directory)
     iteration_dirs.sort()
     return iteration_dirs
+
+
+def find_all_refactoring_folders(base_path: Path) -> list[Path]:
+    """Findet alle Refactoring-Ordner im base_path."""
+    refactoring_folders: list[Path] = []
+    
+    if not base_path.exists():
+        print(f"Warnung: Basisordner {base_path} existiert nicht.")
+        return refactoring_folders
+    
+    for item in base_path.iterdir():
+        if item.is_dir() and not item.name.startswith('.'):
+            # Prüfe ob der Ordner iteration_XX Unterordner enthält
+            has_iterations = any(
+                d.name.startswith(ITERATION_PREFIX) 
+                for d in item.iterdir() 
+                if d.is_dir()
+            )
+            if has_iterations:
+                refactoring_folders.append(item)
+    
+    return sorted(refactoring_folders)
 
 
 def ensure_within_root(root: Path, target: Path) -> Path:
@@ -269,6 +312,7 @@ def build_diff_between_backup_and_refactored(
     for rel in rel_paths:
         rel_path = Path(rel)
 
+        # Überspringe Test-Dateien beim Diff
         if any(part == "tests" for part in rel_path.parts):
             continue
 
@@ -299,6 +343,24 @@ def build_diff_between_backup_and_refactored(
             diffs.append("\n".join(diff_lines))
 
     return has_changes, ("\n\n".join(diffs)).strip()
+
+
+def verify_tests_exist(project_dir: Path) -> bool:
+    """Prüft ob Tests existieren."""
+    tests_dir = project_dir / "tests"
+    
+    if not tests_dir.exists():
+        print(f"  WARNUNG: Tests-Verzeichnis nicht gefunden: {tests_dir}")
+        return False
+    
+    test_files = list(tests_dir.glob("test_*.py")) + list(tests_dir.glob("*_test.py"))
+    
+    if not test_files:
+        print(f"  WARNUNG: Keine Test-Dateien gefunden in: {tests_dir}")
+        return False
+    
+    print(f"  ✓ {len(test_files)} Test-Datei(en) gefunden")
+    return True
 
 
 def process_iteration(
@@ -337,21 +399,28 @@ def process_iteration(
             test_status,
             diff_status,
             "",
-            note=f"Keine Python-Dateien in {code_dir}",
+            note=f"Keine Python-Dateien (außer Tests) in {code_dir}",
         )
         return False, diff_has_changes, format_summary_line(iteration_dir.name, False, diff_has_changes)
 
+    # Erstelle Backup INKLUSIVE Tests
     backup_project(project_src, backup_dir)
 
     diff_has_changes = False
     diff_text = ""
     try:
+        # Wende nur Nicht-Test-Dateien an
         apply_changes(project_src, snapshot_files)
+        
+        # Erstelle Diff (ignoriert Tests)
         diff_has_changes, diff_text = build_diff_between_backup_and_refactored(
             backup_dir=backup_dir, project_src=project_src, snapshot_files=snapshot_files
         )
-        test_result = run_pytest()
+        
+        # Führe Tests aus (Tests sollten jetzt existieren)
+        test_result = run_pytest(project_src)
     finally:
+        # Stelle alles wieder her INKLUSIVE Tests
         restore_project(backup_dir, project_src)
 
     test_success = bool(test_result.get("success"))
@@ -359,7 +428,7 @@ def process_iteration(
 
     diff_status = "SUCCESS" if diff_has_changes else "FAILURE"
 
-    print(f"{iteration_dir.name}: TEST={test_status} DIFF={diff_status}")
+    print(f"  {iteration_dir.name}: TEST={test_status} DIFF={diff_status}")
 
     save_iteration_result_files(
         result_dir,
@@ -372,8 +441,87 @@ def process_iteration(
     return test_success, diff_has_changes, format_summary_line(iteration_dir.name, test_success, diff_has_changes)
 
 
+def process_refactoring_folder(
+    refactoring_folder: Path,
+    project_src: Path,
+    test_results_base: Path,
+) -> dict[str, any]:
+    """Verarbeitet einen einzelnen Refactoring-Ordner."""
+    print(f"\n{'='*80}")
+    print(f"Verarbeite: {refactoring_folder.name}")
+    print(f"{'='*80}")
+    
+    # Prüfe ob Tests existieren
+    if not verify_tests_exist(project_src):
+        print(f"  Überspringe {refactoring_folder.name} - keine Tests vorhanden")
+        return {
+            "folder": refactoring_folder.name,
+            "iterations": 0,
+            "passed": 0,
+            "failed": 0,
+            "summary_lines": ["FEHLER: Keine Tests gefunden"],
+            "error": "no_tests"
+        }
+    
+    results_root = test_results_base / refactoring_folder.name
+    results_root.mkdir(parents=True, exist_ok=True)
+    backup_dir = ensure_within_root(results_root, results_root / "_backup")
+
+    iteration_dirs = find_iteration_dirs(refactoring_folder)
+    
+    if not iteration_dirs:
+        message = f"Keine iteration_XX Ordner gefunden in {refactoring_folder}\n"
+        write_text_file(
+            ensure_within_root(results_root, results_root / SUMMARY_FILENAME),
+            message,
+        )
+        print(f"  {message.strip()}")
+        return {
+            "folder": refactoring_folder.name,
+            "iterations": 0,
+            "passed": 0,
+            "failed": 0,
+            "summary_lines": []
+        }
+
+    summary_lines: list[str] = []
+    passed_count = 0
+    failed_count = 0
+    
+    for iteration_dir in iteration_dirs:
+        test_success, _diff_has_changes, line = process_iteration(
+            iteration_dir, project_src, results_root, backup_dir
+        )
+        summary_lines.append(line)
+        if test_success:
+            passed_count += 1
+        else:
+            failed_count += 1
+
+    summary_text = "\n".join(summary_lines) + "\n"
+    write_text_file(
+        ensure_within_root(results_root, results_root / SUMMARY_FILENAME),
+        summary_text,
+    )
+
+    print(f"\nZusammenfassung für {refactoring_folder.name}:")
+    print(f"  Iterationen gesamt: {len(iteration_dirs)}")
+    print(f"  Tests bestanden: {passed_count}")
+    print(f"  Tests fehlgeschlagen: {failed_count}")
+    
+    return {
+        "folder": refactoring_folder.name,
+        "iterations": len(iteration_dirs),
+        "passed": passed_count,
+        "failed": failed_count,
+        "summary_lines": summary_lines
+    }
+
+
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Run pytest for refactored snapshots")
+    parser = argparse.ArgumentParser(
+        description="Run pytest for all refactored snapshots in the refactoring folder"
+    )
     parser.add_argument(
         "--project-src",
         type=Path,
@@ -381,16 +529,16 @@ def parse_args() -> argparse.Namespace:
         help="Pfad zum Projekt-Quellverzeichnis mit Tests",
     )
     parser.add_argument(
-        "--refactored-root",
+        "--refactoring-base",
         type=Path,
-        default=REFACTORED_ROOT_PATH,
-        help="Pfad zum Ordner mit iteration_XX Verzeichnissen",
+        default=REFACTORING_BASE_PATH,
+        help="Pfad zum Basisordner mit allen Refactoring-Ergebnissen",
     )
     parser.add_argument(
-        "--results-root",
+        "--results-base",
         type=Path,
-        default=TEST_RESULTS_ROOT,
-        help="Pfad zum Ausgabeordner test_results",
+        default=TEST_RESULTS_BASE,
+        help="Pfad zum Basis-Ausgabeordner für test_results",
     )
     return parser.parse_args()
 
@@ -398,33 +546,86 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
     project_src = args.project_src.resolve()
-    refactored_root = args.refactored_root.resolve()
-    results_root = args.results_root.resolve()
+    refactoring_base = args.refactoring_base.resolve()
+    results_base = args.results_base.resolve()
 
-    results_root.mkdir(parents=True, exist_ok=True)
-    backup_dir = ensure_within_root(results_root, results_root / "_backup")
+    results_base.mkdir(parents=True, exist_ok=True)
 
-    iteration_dirs = find_iteration_dirs(refactored_root)
-    if not iteration_dirs:
-        write_text_file(
-            ensure_within_root(results_root, results_root / SUMMARY_FILENAME),
-            f"Keine iteration_XX Ordner gefunden in {refactored_root}\n",
-        )
+    # Prüfe initial ob das Projekt Tests hat
+    print("Initiale Prüfung...")
+    if not verify_tests_exist(project_src):
+        print("\nFEHLER: Keine Tests im Projekt gefunden!")
+        print(f"Bitte stelle sicher, dass {project_src / 'tests'} existiert und Test-Dateien enthält.")
         return
 
-    summary_lines: list[str] = []
-    for iteration_dir in iteration_dirs:
-        _test_success, _diff_has_changes, line = process_iteration(
-            iteration_dir, project_src, results_root, backup_dir
+    # Finde alle Refactoring-Ordner
+    refactoring_folders = find_all_refactoring_folders(refactoring_base)
+    
+    if not refactoring_folders:
+        print(f"Keine Refactoring-Ordner mit Iterationen gefunden in {refactoring_base}")
+        return
+
+    print(f"\nGefundene Refactoring-Ordner: {len(refactoring_folders)}")
+    for folder in refactoring_folders:
+        print(f"  - {folder.name}")
+
+    # Verarbeite jeden Refactoring-Ordner
+    all_results: list[dict] = []
+    for refactoring_folder in refactoring_folders:
+        result = process_refactoring_folder(
+            refactoring_folder,
+            project_src,
+            results_base,
         )
-        summary_lines.append(line)
+        all_results.append(result)
 
+    # Erstelle Gesamt-Zusammenfassung
+    overall_summary_lines: list[str] = []
+    overall_summary_lines.append("="*80)
+    overall_summary_lines.append("GESAMT-ZUSAMMENFASSUNG")
+    overall_summary_lines.append("="*80)
+    overall_summary_lines.append("")
+    
+    total_iterations = 0
+    total_passed = 0
+    total_failed = 0
+    
+    for result in all_results:
+        overall_summary_lines.append(f"\n{result['folder']}:")
+        overall_summary_lines.append(f"  Iterationen: {result['iterations']}")
+        overall_summary_lines.append(f"  Bestanden: {result['passed']}")
+        overall_summary_lines.append(f"  Fehlgeschlagen: {result['failed']}")
+        
+        total_iterations += result['iterations']
+        total_passed += result['passed']
+        total_failed += result['failed']
+        
+        if result['summary_lines']:
+            overall_summary_lines.append("\n  Details:")
+            for line in result['summary_lines']:
+                overall_summary_lines.append(f"    {line}")
+    
+    overall_summary_lines.append("\n" + "="*80)
+    overall_summary_lines.append("GESAMT:")
+    overall_summary_lines.append(f"  Refactoring-Ordner: {len(refactoring_folders)}")
+    overall_summary_lines.append(f"  Iterationen gesamt: {total_iterations}")
+    overall_summary_lines.append(f"  Tests bestanden: {total_passed}")
+    overall_summary_lines.append(f"  Tests fehlgeschlagen: {total_failed}")
+    if total_iterations > 0:
+        success_rate = (total_passed / total_iterations) * 100
+        overall_summary_lines.append(f"  Erfolgsrate: {success_rate:.1f}%")
+    overall_summary_lines.append("="*80)
+    
+    overall_summary = "\n".join(overall_summary_lines) + "\n"
+    
+    # Schreibe Gesamt-Zusammenfassung
     write_text_file(
-        ensure_within_root(results_root, results_root / SUMMARY_FILENAME),
-        "\n".join(summary_lines) + "\n",
+        results_base / OVERALL_SUMMARY_FILENAME,
+        overall_summary,
     )
-
-    print(f"\nZusammenfassung:\n{chr(10).join(summary_lines)}")
+    
+    print(f"\n\n{overall_summary}")
+    print(f"\nErgebnisse gespeichert in: {results_base}")
 
 
 if __name__ == "__main__":
