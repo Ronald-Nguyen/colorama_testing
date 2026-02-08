@@ -1,0 +1,32 @@
+--- backup/ansitowin32.py
++++ refactored/ansitowin32.py
+@@ -28,2 +28,2 @@
+-if'PYCHARM_HOSTED'inos.environ:
+-ifstreamisnotNoneand(streamissys.__stdout__orstreamissys.__stderr__):
++if'PYCHARM_HOSTED'inos.environandstreamisnotNone:
++ifstreamissys.__stdout__orstreamissys.__stderr__:
+@@ -148 +148 @@
+-else:
++returnparams
+@@ -165 +165,2 @@
+-elifcommandin'J':
++return
++ifcommandin'J':
+@@ -167 +168,2 @@
+-elifcommandin'K':
++return
++ifcommandin'K':
+@@ -169 +171,2 @@
+-elifcommandin'Hf':
++return
++ifcommandin'Hf':
+@@ -171 +174,2 @@
+-elifcommandin'ABCD':
++return
++ifcommandin'ABCD':
+@@ -174,0 +179 @@
++return
+@@ -180,2 +185 @@
+-ifcommand==BEL:
+-ifparamstring.count(";")==1:
++ifcommand==BELandparamstring.count(";")==1:

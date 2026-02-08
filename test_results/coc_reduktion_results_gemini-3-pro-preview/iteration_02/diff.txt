@@ -1,0 +1,100 @@
+--- backup/ansi.py
++++ refactored/ansi.py
+@@ -15 +15,2 @@
+-ifnotname.startswith('_'):
++ifname.startswith('_'):
++continue
+
+--- backup/ansitowin32.py
++++ refactored/ansitowin32.py
+@@ -35 +34,0 @@
+-else:
+@@ -144,0 +144,3 @@
++returnself.extract_params_hf(paramstring)
++returnself.extract_params_general(command,paramstring)
++defextract_params_hf(self,paramstring):
+@@ -148 +150,2 @@
+-else:
++returnparams
++defextract_params_general(self,command,paramstring):
+@@ -157,0 +161,10 @@
++self.call_win32_m(params)
++elifcommandin'J':
++winterm.erase_screen(params[0],on_stderr=self.on_stderr)
++elifcommandin'K':
++winterm.erase_line(params[0],on_stderr=self.on_stderr)
++elifcommandin'Hf':
++winterm.set_cursor_position(params,on_stderr=self.on_stderr)
++elifcommandin'ABCD':
++self.call_win32_movement(command,params)
++defcall_win32_m(self,params):
+@@ -165,7 +178 @@
+-elifcommandin'J':
+-winterm.erase_screen(params[0],on_stderr=self.on_stderr)
+-elifcommandin'K':
+-winterm.erase_line(params[0],on_stderr=self.on_stderr)
+-elifcommandin'Hf':
+-winterm.set_cursor_position(params,on_stderr=self.on_stderr)
+-elifcommandin'ABCD':
++defcall_win32_movement(self,command,params):
+@@ -179,0 +187,3 @@
++self.set_title_from_osc(command,paramstring)
++returntext
++defset_title_from_osc(self,command,paramstring):
+@@ -185 +194,0 @@
+-returntext
+
+--- backup/winterm.py
++++ refactored/winterm.py
+@@ -92,12 +92,2 @@
+-cells_in_screen=csbi.dwSize.X*csbi.dwSize.Y
+-cells_before_cursor=csbi.dwSize.X*csbi.dwCursorPosition.Y+csbi.dwCursorPosition.X
+-ifmode==0:
+-from_coord=csbi.dwCursorPosition
+-cells_to_erase=cells_in_screen-cells_before_cursor
+-elifmode==1:
+-from_coord=win32.COORD(0,0)
+-cells_to_erase=cells_before_cursor
+-elifmode==2:
+-from_coord=win32.COORD(0,0)
+-cells_to_erase=cells_in_screen
+-else:
++target=self.get_erase_screen_target(mode,csbi)
++ifnottarget:
+@@ -104,0 +95 @@
++cells_to_erase,from_coord=target
+@@ -108,0 +100,10 @@
++defget_erase_screen_target(self,mode,csbi):
++cells_in_screen=csbi.dwSize.X*csbi.dwSize.Y
++cells_before_cursor=csbi.dwSize.X*csbi.dwCursorPosition.Y+csbi.dwCursorPosition.X
++ifmode==0:
++returncells_in_screen-cells_before_cursor,csbi.dwCursorPosition
++ifmode==1:
++returncells_before_cursor,win32.COORD(0,0)
++ifmode==2:
++returncells_in_screen,win32.COORD(0,0)
++returnNone
+@@ -114,10 +115,2 @@
+-ifmode==0:
+-from_coord=csbi.dwCursorPosition
+-cells_to_erase=csbi.dwSize.X-csbi.dwCursorPosition.X
+-elifmode==1:
+-from_coord=win32.COORD(0,csbi.dwCursorPosition.Y)
+-cells_to_erase=csbi.dwCursorPosition.X
+-elifmode==2:
+-from_coord=win32.COORD(0,csbi.dwCursorPosition.Y)
+-cells_to_erase=csbi.dwSize.X
+-else:
++target=self.get_erase_line_target(mode,csbi)
++ifnottarget:
+@@ -124,0 +118 @@
++cells_to_erase,from_coord=target
+@@ -126,0 +121,8 @@
++defget_erase_line_target(self,mode,csbi):
++ifmode==0:
++returncsbi.dwSize.X-csbi.dwCursorPosition.X,csbi.dwCursorPosition
++ifmode==1:
++returncsbi.dwCursorPosition.X,win32.COORD(0,csbi.dwCursorPosition.Y)
++ifmode==2:
++returncsbi.dwSize.X,win32.COORD(0,csbi.dwCursorPosition.Y)
++returnNone

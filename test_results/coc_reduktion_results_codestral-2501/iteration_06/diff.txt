@@ -1,0 +1,28 @@
+--- backup/ansitowin32.py
++++ refactored/ansitowin32.py
+@@ -50,0 +51,4 @@
++self.win32_calls=self.get_win32_calls()
++self.on_stderr=self.wrappedissys.stderr
++self.setup_conversion(convert,strip)
++defsetup_conversion(self,convert,strip):
+@@ -54 +58 @@
+-fd=wrapped.fileno()
++fd=self.wrapped.fileno()
+@@ -66,2 +69,0 @@
+-self.win32_calls=self.get_win32_calls()
+-self.on_stderr=self.wrappedissys.stderr
+
+--- backup/initialise.py
++++ refactored/initialise.py
+@@ -30,2 +30 @@
+-sys.stdout=wrapped_stdout=\
+-wrap_stream(orig_stdout,convert,strip,autoreset,wrap)
++sys.stdout=wrapped_stdout=wrap_stream(orig_stdout,convert,strip,autoreset,wrap)
+@@ -35,2 +34 @@
+-sys.stderr=wrapped_stderr=\
+-wrap_stream(orig_stderr,convert,strip,autoreset,wrap)
++sys.stderr=wrapped_stderr=wrap_stream(orig_stderr,convert,strip,autoreset,wrap)
+@@ -75,2 +73 @@
+-wrapper=AnsiToWin32(stream,
+-convert=convert,strip=strip,autoreset=autoreset)
++wrapper=AnsiToWin32(stream,convert=convert,strip=strip,autoreset=autoreset)

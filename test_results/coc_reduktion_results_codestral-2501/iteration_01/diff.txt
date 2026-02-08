@@ -1,0 +1,22 @@
+--- backup/ansitowin32.py
++++ refactored/ansitowin32.py
+@@ -45,2 +45,2 @@
+-ANSI_CSI_RE=re.compile('\001?\033\\[((?:\\d|;)*)([a-zA-Z])\002?')
+-ANSI_OSC_RE=re.compile('\001?\033\\]([^\a]*)(\a)\002?')
++ANSI_CSI_RE=re.compile(r'\001?\033\\[((?:\\d|;)*)([a-zA-Z])\002?')
++ANSI_OSC_RE=re.compile(r'\001?\033\\]([^\a]*)(\a)\002?')
+@@ -50,0 +51,2 @@
++self._initialize_conversion(convert,strip)
++def_initialize_conversion(self,convert,strip):
+@@ -54 +56 @@
+-fd=wrapped.fileno()
++fd=self.wrapped.fileno()
+@@ -60,6 +62,2 @@
+-ifstripisNone:
+-strip=need_conversionornothave_tty
+-self.strip=strip
+-ifconvertisNone:
+-convert=need_conversionandhave_tty
+-self.convert=convert
++self.strip=stripifstripisnotNoneelseneed_conversionornothave_tty
++self.convert=convertifconvertisnotNoneelseneed_conversionandhave_tty

@@ -1,0 +1,5 @@
+--- backup/win32.py
++++ refactored/win32.py
+@@ -84 +84 @@
+-_SetConsoleMode=windll.kernel32.SetConsoleMode
++_SetConsoleMode=windll.kernel32.GetConsoleMode

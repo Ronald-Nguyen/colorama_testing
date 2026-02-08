@@ -1,0 +1,40 @@
+TEST_STATUS: SUCCESS
+DIFF_STATUS: FAILURE
+RETURNCODE: 0
+TIMESTAMP: 2026-02-08T21:48:29.911938
+
+=== PYTEST STDOUT ===
+============================= test session starts =============================
+platform win32 -- Python 3.14.2, pytest-9.0.2, pluggy-0.1.dev945+g0cf9e32a7.d20260207
+benchmark: 5.2.3 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+rootdir: C:\Users\ronal\colorama_testing
+configfile: pyproject.toml
+plugins: anyio-4.12.1, hypothesis-6.148.8, benchmark-5.2.3, cov-7.0.0
+collected 66 items
+
+colorama\tests\ansi_test.py ...                                          [  4%]
+colorama\tests\ansitowin32_test.py .......................               [ 39%]
+colorama\tests\initialise_test.py ssssssssss.                            [ 56%]
+colorama\tests\isatty_test.py .......                                    [ 66%]
+colorama\tests\refactoring_test.py .ss.ss                                [ 75%]
+colorama\tests\test_coverage.py ........                                 [ 87%]
+colorama\tests\winterm_test.py ........                                  [100%]
+
+=============================== tests coverage ================================
+_______________ coverage: platform win32, python 3.14.2-final-0 _______________
+
+Name                      Stmts   Miss  Cover   Missing
+-------------------------------------------------------
+colorama\__init__.py          4      0   100%
+colorama\ansi.py             73      0   100%
+colorama\ansitowin32.py     145      0   100%
+colorama\initialise.py       66      1    98%   70
+colorama\win32.py            95      0   100%
+colorama\winterm.py         136      0   100%
+-------------------------------------------------------
+TOTAL                       519      1    99%
+======================= 52 passed, 14 skipped in 1.22s ========================
+
+
+=== PYTEST STDERR ===
+

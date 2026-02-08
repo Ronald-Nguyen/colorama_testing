@@ -1,0 +1,6 @@
+--- backup/win32.py
++++ refactored/win32.py
+@@ -105,2 +105 @@
+-handle=_GetStdHandle(stream_id)
+-return_SetConsoleTextAttribute(handle,attrs)
++return_SetConsoleTextAttribute(_GetStdHandle(stream_id),attrs)

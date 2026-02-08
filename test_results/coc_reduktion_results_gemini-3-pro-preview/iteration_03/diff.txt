@@ -1,0 +1,41 @@
+--- backup/ansitowin32.py
++++ refactored/ansitowin32.py
+@@ -28,2 +28,2 @@
+-if'PYCHARM_HOSTED'inos.environ:
+-ifstreamisnotNoneand(streamissys.__stdout__orstreamissys.__stderr__):
++if'PYCHARM_HOSTED'inos.environandstreamisnotNoneand\
++(streamissys.__stdout__orstreamissys.__stderr__):
+@@ -144,0 +145,3 @@
++returnself.extract_params_hf(paramstring)
++returnself.extract_params_other(command,paramstring)
++defextract_params_hf(self,paramstring):
+@@ -148 +151,2 @@
+-else:
++returnparams
++defextract_params_other(self,command,paramstring):
+@@ -157,0 +162,10 @@
++self.call_win32_m(params)
++elifcommandin'J':
++winterm.erase_screen(params[0],on_stderr=self.on_stderr)
++elifcommandin'K':
++winterm.erase_line(params[0],on_stderr=self.on_stderr)
++elifcommandin'Hf':
++winterm.set_cursor_position(params,on_stderr=self.on_stderr)
++elifcommandin'ABCD':
++self.call_win32_movement(command,params)
++defcall_win32_m(self,params):
+@@ -165,7 +179 @@
+-elifcommandin'J':
+-winterm.erase_screen(params[0],on_stderr=self.on_stderr)
+-elifcommandin'K':
+-winterm.erase_line(params[0],on_stderr=self.on_stderr)
+-elifcommandin'Hf':
+-winterm.set_cursor_position(params,on_stderr=self.on_stderr)
+-elifcommandin'ABCD':
++defcall_win32_movement(self,command,params):
+@@ -179,0 +188,3 @@
++self.set_title(command,paramstring)
++returntext
++defset_title(self,command,paramstring):
+@@ -185 +195,0 @@
+-returntext

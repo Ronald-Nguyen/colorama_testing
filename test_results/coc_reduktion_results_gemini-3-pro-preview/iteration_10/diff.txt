@@ -1,0 +1,108 @@
+--- backup/ansitowin32.py
++++ refactored/ansitowin32.py
+@@ -144,0 +145,3 @@
++returnself._extract_params_hf(paramstring)
++returnself._extract_params_other(command,paramstring)
++def_extract_params_hf(self,paramstring):
+@@ -148 +151,2 @@
+-else:
++returnparams
++def_extract_params_other(self,command,paramstring):
+@@ -150 +154,2 @@
+-iflen(params)==0:
++iflen(params)!=0:
++returnparams
+@@ -152,3 +157,3 @@
+-params=(0,)
+-elifcommandin'ABCD':
+-params=(1,)
++return(0,)
++ifcommandin'ABCD':
++return(1,)
+@@ -157,0 +163,14 @@
++self._call_win32_m(params)
++return
++ifcommandin'J':
++winterm.erase_screen(params[0],on_stderr=self.on_stderr)
++return
++ifcommandin'K':
++winterm.erase_line(params[0],on_stderr=self.on_stderr)
++return
++ifcommandin'Hf':
++winterm.set_cursor_position(params,on_stderr=self.on_stderr)
++return
++ifcommandin'ABCD':
++self._call_win32_movement(command,params)
++def_call_win32_m(self,params):
+@@ -165,7 +184 @@
+-elifcommandin'J':
+-winterm.erase_screen(params[0],on_stderr=self.on_stderr)
+-elifcommandin'K':
+-winterm.erase_line(params[0],on_stderr=self.on_stderr)
+-elifcommandin'Hf':
+-winterm.set_cursor_position(params,on_stderr=self.on_stderr)
+-elifcommandin'ABCD':
++def_call_win32_movement(self,command,params):
+@@ -179,0 +193,3 @@
++self._set_title(command,paramstring)
++returntext
++def_set_title(self,command,paramstring):
+@@ -185 +200,0 @@
+-returntext
+
+--- backup/winterm.py
++++ refactored/winterm.py
+@@ -92,12 +92,2 @@
+-cells_in_screen=csbi.dwSize.X*csbi.dwSize.Y
+-cells_before_cursor=csbi.dwSize.X*csbi.dwCursorPosition.Y+csbi.dwCursorPosition.X
+-ifmode==0:
+-from_coord=csbi.dwCursorPosition
+-cells_to_erase=cells_in_screen-cells_before_cursor
+-elifmode==1:
+-from_coord=win32.COORD(0,0)
+-cells_to_erase=cells_before_cursor
+-elifmode==2:
+-from_coord=win32.COORD(0,0)
+-cells_to_erase=cells_in_screen
+-else:
++erase_args=self._erase_screen_calc(mode,csbi)
++iferase_argsisNone:
+@@ -104,0 +95 @@
++cells_to_erase,from_coord=erase_args
+@@ -108,0 +100,12 @@
++def_erase_screen_calc(self,mode,csbi):
++ifmode==0:
++cells_in_screen=csbi.dwSize.X*csbi.dwSize.Y
++cells_before_cursor=csbi.dwSize.X*csbi.dwCursorPosition.Y+csbi.dwCursorPosition.X
++returncells_in_screen-cells_before_cursor,csbi.dwCursorPosition
++ifmode==1:
++cells_before_cursor=csbi.dwSize.X*csbi.dwCursorPosition.Y+csbi.dwCursorPosition.X
++returncells_before_cursor,win32.COORD(0,0)
++ifmode==2:
++cells_in_screen=csbi.dwSize.X*csbi.dwSize.Y
++returncells_in_screen,win32.COORD(0,0)
++returnNone
+@@ -114,10 +117,2 @@
+-ifmode==0:
+-from_coord=csbi.dwCursorPosition
+-cells_to_erase=csbi.dwSize.X-csbi.dwCursorPosition.X
+-elifmode==1:
+-from_coord=win32.COORD(0,csbi.dwCursorPosition.Y)
+-cells_to_erase=csbi.dwCursorPosition.X
+-elifmode==2:
+-from_coord=win32.COORD(0,csbi.dwCursorPosition.Y)
+-cells_to_erase=csbi.dwSize.X
+-else:
++erase_args=self._erase_line_calc(mode,csbi)
++iferase_argsisNone:
+@@ -124,0 +120 @@
++cells_to_erase,from_coord=erase_args
+@@ -126,0 +123,8 @@
++def_erase_line_calc(self,mode,csbi):
++ifmode==0:
++returncsbi.dwSize.X-csbi.dwCursorPosition.X,csbi.dwCursorPosition
++ifmode==1:
++returncsbi.dwCursorPosition.X,win32.COORD(0,csbi.dwCursorPosition.Y)
++ifmode==2:
++returncsbi.dwSize.X,win32.COORD(0,csbi.dwCursorPosition.Y)
++returnNone

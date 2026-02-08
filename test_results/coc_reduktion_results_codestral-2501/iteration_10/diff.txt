@@ -1,0 +1,13 @@
+--- backup/ansitowin32.py
++++ refactored/ansitowin32.py
+@@ -50,0 +51,4 @@
++self.win32_calls=self.get_win32_calls()
++self.on_stderr=self.wrappedissys.stderr
++self.setup_conversion(convert,strip)
++defsetup_conversion(self,convert,strip):
+@@ -54 +58 @@
+-fd=wrapped.fileno()
++fd=self.wrapped.fileno()
+@@ -66,2 +69,0 @@
+-self.win32_calls=self.get_win32_calls()
+-self.on_stderr=self.wrappedissys.stderr

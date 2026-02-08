@@ -1,0 +1,31 @@
+--- backup/ansitowin32.py
++++ refactored/ansitowin32.py
+@@ -157 +157,3 @@
+-ifcommand=='m':
++ifcommandinself.ANSI_STRATEGIES:
++getattr(self,self.ANSI_STRATEGIES[command])(command,params)
++def_win32_graphics_mode(self,command,params):
+@@ -165 +167 @@
+-elifcommandin'J':
++def_win32_erase_screen(self,command,params):
+@@ -167 +169 @@
+-elifcommandin'K':
++def_win32_erase_line(self,command,params):
+@@ -169 +171 @@
+-elifcommandin'Hf':
++def_win32_cursor_position(self,command,params):
+@@ -171 +173 @@
+-elifcommandin'ABCD':
++def_win32_cursor_move(self,command,params):
+@@ -174,0 +177,11 @@
++ANSI_STRATEGIES={
++'m':'_win32_graphics_mode',
++'J':'_win32_erase_screen',
++'K':'_win32_erase_line',
++'H':'_win32_cursor_position',
++'f':'_win32_cursor_position',
++'A':'_win32_cursor_move',
++'B':'_win32_cursor_move',
++'C':'_win32_cursor_move',
++'D':'_win32_cursor_move',
++}

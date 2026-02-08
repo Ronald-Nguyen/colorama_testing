@@ -1,0 +1,127 @@
+--- backup/ansitowin32.py
++++ refactored/ansitowin32.py
+@@ -28,2 +28,3 @@
+-if'PYCHARM_HOSTED'inos.environ:
+-ifstreamisnotNoneand(streamissys.__stdout__orstreamissys.__stderr__):
++if('PYCHARM_HOSTED'inos.environand
++streamisnotNoneand
++(streamissys.__stdout__orstreamissys.__stderr__)):
+@@ -144,0 +146,3 @@
++returnself._extract_params_hf(paramstring)
++returnself._extract_params_default(command,paramstring)
++def_extract_params_hf(self,paramstring):
+@@ -148 +152,2 @@
+-else:
++returnparams
++def_extract_params_default(self,command,paramstring):
+@@ -157,0 +163,10 @@
++self._call_win32_m(params)
++elifcommandin'J':
++winterm.erase_screen(params[0],on_stderr=self.on_stderr)
++elifcommandin'K':
++winterm.erase_line(params[0],on_stderr=self.on_stderr)
++elifcommandin'Hf':
++winterm.set_cursor_position(params,on_stderr=self.on_stderr)
++elifcommandin'ABCD':
++self._call_win32_cursor(command,params)
++def_call_win32_m(self,params):
+@@ -165,7 +180 @@
+-elifcommandin'J':
+-winterm.erase_screen(params[0],on_stderr=self.on_stderr)
+-elifcommandin'K':
+-winterm.erase_line(params[0],on_stderr=self.on_stderr)
+-elifcommandin'Hf':
+-winterm.set_cursor_position(params,on_stderr=self.on_stderr)
+-elifcommandin'ABCD':
++def_call_win32_cursor(self,command,params):
+@@ -180,0 +190,3 @@
++self._convert_osc_bel(paramstring)
++returntext
++def_convert_osc_bel(self,paramstring):
+@@ -185 +196,0 @@
+-returntext
+
+--- backup/winterm.py
++++ refactored/winterm.py
+@@ -60,0 +61,2 @@
++def_get_handle(self,on_stderr):
++returnwin32.STDERRifon_stderrelsewin32.STDOUT
+@@ -64,3 +66 @@
+-handle=win32.STDOUT
+-ifon_stderr:
+-handle=win32.STDERR
++handle=self._get_handle(on_stderr)
+@@ -76,3 +76 @@
+-handle=win32.STDOUT
+-ifon_stderr:
+-handle=win32.STDERR
++handle=self._get_handle(on_stderr)
+@@ -81,3 +79 @@
+-handle=win32.STDOUT
+-ifon_stderr:
+-handle=win32.STDERR
++handle=self._get_handle(on_stderr)
+@@ -88,3 +84 @@
+-handle=win32.STDOUT
+-ifon_stderr:
+-handle=win32.STDERR
++handle=self._get_handle(on_stderr)
+@@ -91,0 +86,6 @@
++region=self._get_screen_region(mode,csbi)
++ifregion:
++self._fill_region(handle,*region)
++ifmode==2:
++win32.SetConsoleCursorPosition(handle,(1,1))
++def_get_screen_region(self,mode,csbi):
+@@ -95,12 +95,3 @@
+-from_coord=csbi.dwCursorPosition
+-cells_to_erase=cells_in_screen-cells_before_cursor
+-elifmode==1:
+-from_coord=win32.COORD(0,0)
+-cells_to_erase=cells_before_cursor
+-elifmode==2:
+-from_coord=win32.COORD(0,0)
+-cells_to_erase=cells_in_screen
+-else:
+-return
+-win32.FillConsoleOutputCharacter(handle,'',cells_to_erase,from_coord)
+-win32.FillConsoleOutputAttribute(handle,self.get_attrs(),cells_to_erase,from_coord)
++returncells_in_screen-cells_before_cursor,csbi.dwCursorPosition
++ifmode==1:
++returncells_before_cursor,win32.COORD(0,0)
+@@ -108 +99,2 @@
+-win32.SetConsoleCursorPosition(handle,(1,1))
++returncells_in_screen,win32.COORD(0,0)
++returnNone
+@@ -110,3 +102 @@
+-handle=win32.STDOUT
+-ifon_stderr:
+-handle=win32.STDERR
++handle=self._get_handle(on_stderr)
+@@ -113,0 +104,4 @@
++region=self._get_line_region(mode,csbi)
++ifregion:
++self._fill_region(handle,*region)
++def_get_line_region(self,mode,csbi):
+@@ -115,12 +109,9 @@
+-from_coord=csbi.dwCursorPosition
+-cells_to_erase=csbi.dwSize.X-csbi.dwCursorPosition.X
+-elifmode==1:
+-from_coord=win32.COORD(0,csbi.dwCursorPosition.Y)
+-cells_to_erase=csbi.dwCursorPosition.X
+-elifmode==2:
+-from_coord=win32.COORD(0,csbi.dwCursorPosition.Y)
+-cells_to_erase=csbi.dwSize.X
+-else:
+-return
+-win32.FillConsoleOutputCharacter(handle,'',cells_to_erase,from_coord)
+-win32.FillConsoleOutputAttribute(handle,self.get_attrs(),cells_to_erase,from_coord)
++returncsbi.dwSize.X-csbi.dwCursorPosition.X,csbi.dwCursorPosition
++ifmode==1:
++returncsbi.dwCursorPosition.X,win32.COORD(0,csbi.dwCursorPosition.Y)
++ifmode==2:
++returncsbi.dwSize.X,win32.COORD(0,csbi.dwCursorPosition.Y)
++returnNone
++def_fill_region(self,handle,count,start):
++win32.FillConsoleOutputCharacter(handle,'',count,start)
++win32.FillConsoleOutputAttribute(handle,self.get_attrs(),count,start)

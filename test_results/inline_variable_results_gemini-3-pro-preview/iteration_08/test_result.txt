@@ -1,0 +1,138 @@
+TEST_STATUS: FAILURE
+DIFF_STATUS: SUCCESS
+RETURNCODE: 1
+TIMESTAMP: 2026-02-08T21:49:23.991717
+
+=== PYTEST STDOUT ===
+============================= test session starts =============================
+platform win32 -- Python 3.14.2, pytest-9.0.2, pluggy-0.1.dev945+g0cf9e32a7.d20260207
+benchmark: 5.2.3 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+rootdir: C:\Users\ronal\colorama_testing
+configfile: pyproject.toml
+plugins: anyio-4.12.1, hypothesis-6.148.8, benchmark-5.2.3, cov-7.0.0
+collected 66 items
+
+colorama\tests\ansi_test.py ...                                          [  4%]
+colorama\tests\ansitowin32_test.py .......................               [ 39%]
+colorama\tests\initialise_test.py ssssssssss.                            [ 56%]
+colorama\tests\isatty_test.py .......                                    [ 66%]
+colorama\tests\refactoring_test.py .ss.ss                                [ 75%]
+colorama\tests\test_coverage.py ......F.                                 [ 87%]
+colorama\tests\winterm_test.py ........                                  [100%]
+
+================================== FAILURES ===================================
+__________________ test_win32_api_wrappers_and_console_info ___________________
+
+    def test_win32_api_wrappers_and_console_info():
+        with fake_windows_modules() as (fake_win32, _fake_winterm):
+            info = fake_win32.CONSOLE_SCREEN_BUFFER_INFO()
+            info.dwSize.X = 10
+            info.dwSize.Y = 20
+            info.dwCursorPosition.X = 3
+            info.dwCursorPosition.Y = 4
+            info.wAttributes = 7
+            info.srWindow.Top = 1
+            info.srWindow.Left = 2
+            info.srWindow.Bottom = 3
+            info.srWindow.Right = 4
+            info.dwMaximumWindowSize.X = 30
+            info.dwMaximumWindowSize.Y = 40
+            assert_true(str(info))
+    
+            fake_win32._GetStdHandle = Mock(side_effect=lambda handle: handle)
+    
+            def fake_get_csbi(_handle, csbi_ptr):
+                csbi = csbi_ptr._obj
+                csbi.dwSize.X = 10
+                csbi.dwSize.Y = 5
+                csbi.dwCursorPosition.X = 2
+                csbi.dwCursorPosition.Y = 3
+                csbi.wAttributes = 7
+                csbi.srWindow.Top = 1
+                csbi.srWindow.Left = 1
+                csbi.srWindow.Bottom = 4
+                csbi.srWindow.Right = 5
+                csbi.dwMaximumWindowSize.X = 8
+                csbi.dwMaximumWindowSize.Y = 9
+                return 1
+    
+            fake_win32._GetConsoleScreenBufferInfo = fake_get_csbi
+            fake_win32._SetConsoleTextAttribute = Mock(return_value=True)
+            fake_win32._SetConsoleCursorPosition = Mock(return_value=True)
+    
+            def fake_fill_character(_handle, _char, length, _start, num_written):
+                num_written._obj.value = length.value
+                return 1
+    
+            def fake_fill_attribute(_handle, _attr, length, _start, num_written):
+                num_written._obj.value = length.value
+                return 1
+    
+            fake_win32._FillConsoleOutputCharacterA = fake_fill_character
+            fake_win32._FillConsoleOutputAttribute = fake_fill_attribute
+            fake_win32._SetConsoleTitleW = Mock(return_value=True)
+    
+            def fake_get_mode(_handle, mode_ptr):
+                mode_ptr._obj.value = 1
+                return 1
+    
+            fake_win32._GetConsoleMode = fake_get_mode
+            fake_win32._SetConsoleMode = Mock(return_value=True)
+    
+            assert_true(fake_win32._winapi_test(123))
+            assert_true(fake_win32.winapi_test())
+            csbi = fake_win32.GetConsoleScreenBufferInfo(fake_win32.STDOUT)
+            assert_equal(csbi.dwSize.X, 10)
+            assert_true(fake_win32.SetConsoleTextAttribute(fake_win32.STDOUT, 7))
+            fake_win32.SetConsoleCursorPosition(fake_win32.STDOUT, (2, 3))
+            assert_is(fake_win32.SetConsoleCursorPosition(fake_win32.STDOUT, (0, 0)), None)
+            assert_equal(
+                fake_win32.FillConsoleOutputCharacter(
+                    fake_win32.STDOUT, "X", 5, fake_win32.COORD(0, 0)
+                ),
+                5,
+            )
+            assert_equal(
+                fake_win32.FillConsoleOutputAttribute(
+                    fake_win32.STDOUT, 7, 5, fake_win32.COORD(0, 0)
+                ),
+                1,
+            )
+            fake_win32.SetConsoleTitle("title")
+            assert_equal(fake_win32.GetConsoleMode(123), 1)
+>           fake_win32.SetConsoleMode(123, 1)
+
+colorama\tests\test_coverage.py:390: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+handle = 123, mode = 1
+
+    def SetConsoleMode(handle, mode):
+        success = _SetConsoleMode(handle, mode)
+        if not success:
+            raise ctypes.WinError()
+>       return mode.value
+               ^^^^^^^^^^
+E       AttributeError: 'int' object has no attribute 'value'
+
+colorama\win32.py:169: AttributeError
+=============================== tests coverage ================================
+_______________ coverage: platform win32, python 3.14.2-final-0 _______________
+
+Name                      Stmts   Miss  Cover   Missing
+-------------------------------------------------------
+colorama\__init__.py          4      0   100%
+colorama\ansi.py             73      0   100%
+colorama\ansitowin32.py     145      0   100%
+colorama\initialise.py       66      1    98%   70
+colorama\win32.py            95      2    98%   162, 168
+colorama\winterm.py         136      0   100%
+-------------------------------------------------------
+TOTAL                       519      3    99%
+=========================== short test summary info ===========================
+FAILED colorama/tests/test_coverage.py::test_win32_api_wrappers_and_console_info
+================== 1 failed, 51 passed, 14 skipped in 1.28s ===================
+
+
+=== PYTEST STDERR ===
+

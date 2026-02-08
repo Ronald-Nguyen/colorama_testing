@@ -1,0 +1,36 @@
+--- backup/ansitowin32.py
++++ refactored/ansitowin32.py
+@@ -156,2 +156 @@
+-defcall_win32(self,command,params):
+-ifcommand=='m':
++def_strategy_m(self,params):
+@@ -165 +164 @@
+-elifcommandin'J':
++def_strategy_J(self,params):
+@@ -167 +166 @@
+-elifcommandin'K':
++def_strategy_K(self,params):
+@@ -169 +168 @@
+-elifcommandin'Hf':
++def_strategy_Hf(self,params):
+@@ -171 +170 @@
+-elifcommandin'ABCD':
++def_strategy_ABCD(self,params):
+@@ -173 +172 @@
+-x,y={'A':(0,-n),'B':(0,n),'C':(n,0),'D':(-n,0)}[command]
++x,y={'A':(0,-n),'B':(0,n),'C':(n,0),'D':(-n,0)}[params[1]]
+@@ -174,0 +174,14 @@
++COMMAND_STRATEGIES={
++'m':_strategy_m,
++'J':_strategy_J,
++'K':_strategy_K,
++'H':_strategy_Hf,
++'f':_strategy_Hf,
++'A':_strategy_ABCD,
++'B':_strategy_ABCD,
++'C':_strategy_ABCD,
++'D':_strategy_ABCD,
++}
++defcall_win32(self,command,params):
++ifcommandinself.COMMAND_STRATEGIES:
++self.COMMAND_STRATEGIES[command](self,params)

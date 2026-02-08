@@ -26,7 +26,7 @@ def get_project_structure(project_dir: Path) -> str:
             d
             for d in dirs
             if not d.startswith(".")
-            and d not in {"__pycache__", "pathlib2.egg-info"}
+            and d not in {"__pycache__", "tests", "pathlib2.egg-info"}
         ]
         level = root.replace(str(project_dir), "").count(os.sep)
         indent = " " * 2 * level
@@ -39,30 +39,79 @@ def get_project_structure(project_dir: Path) -> str:
 
 
 def backup_project(project_dir: Path, backup_dir: Path) -> None:
-    """Erstellt ein Backup des Projekts INKLUSIVE der Tests."""
+    """Erstellt ein Backup des Projekts OHNE Tests."""
     if backup_dir.exists():
         shutil.rmtree(backup_dir)
-    shutil.copytree(
-        project_dir,
-        backup_dir,
-        ignore=shutil.ignore_patterns(
-            "__pycache__", "*.pyc", ".git", "*.egg-info"
-        ),
-    )
+    
+    # Kopiere nur Nicht-Test-Dateien
+    backup_dir.mkdir(parents=True, exist_ok=True)
+    
+    for item in project_dir.iterdir():
+        if item.name in {'__pycache__', '.git', 'tests', '.pytest_cache', '*.egg-info'}:
+            continue
+        if item.name.startswith('.'):
+            continue
+            
+        dest = backup_dir / item.name
+        
+        if item.is_file():
+            if item.suffix == '.py' or item.suffix in {'.txt', '.md', '.toml', '.ini', '.cfg'}:
+                shutil.copy2(item, dest)
+        elif item.is_dir():
+            shutil.copytree(
+                item,
+                dest,
+                ignore=shutil.ignore_patterns('__pycache__', '*.pyc', '.git', 'tests', '*.egg-info')
+            )
 
 
 def restore_project(backup_dir: Path, project_dir: Path) -> None:
-    """Stellt das Projekt aus dem Backup wieder her INKLUSIVE der Tests"""
+    """Stellt das Projekt aus dem Backup wieder her, OHNE Tests zu löschen."""
     backup_dir = Path(backup_dir).resolve()
     project_dir = Path(project_dir).resolve()
 
     if not backup_dir.exists():
         raise FileNotFoundError(f"Backup-Verzeichnis nicht gefunden: {backup_dir}")
 
-    if project_dir.exists():
-        shutil.rmtree(project_dir)
-    project_dir.mkdir(parents=True, exist_ok=True)
-    shutil.copytree(backup_dir, project_dir, dirs_exist_ok=True)
+    # Sichere den Tests-Ordner temporär
+    tests_dir = project_dir / "tests"
+    temp_tests_dir = None
+    
+    if tests_dir.exists():
+        temp_tests_dir = project_dir.parent / f".temp_tests_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        shutil.copytree(tests_dir, temp_tests_dir)
+    
+    try:
+        # Lösche nur Nicht-Test-Inhalte
+        for item in project_dir.iterdir():
+            if item.name == "tests":
+                continue
+            if item.name.startswith('.'):
+                continue
+                
+            if item.is_file():
+                item.unlink()
+            elif item.is_dir():
+                shutil.rmtree(item)
+        
+        # Kopiere Backup zurück
+        for item in backup_dir.iterdir():
+            dest = project_dir / item.name
+            if item.is_file():
+                shutil.copy2(item, dest)
+            elif item.is_dir():
+                shutil.copytree(item, dest)
+        
+        # Stelle Tests wieder her
+        if temp_tests_dir and temp_tests_dir.exists():
+            if tests_dir.exists():
+                shutil.rmtree(tests_dir)
+            shutil.copytree(temp_tests_dir, tests_dir)
+            
+    finally:
+        # Räume temporäres Tests-Verzeichnis auf
+        if temp_tests_dir and temp_tests_dir.exists():
+            shutil.rmtree(temp_tests_dir)
 
 
 def apply_changes(project_dir: Path | str, files: dict[str, str]) -> None:
@@ -72,7 +121,7 @@ def apply_changes(project_dir: Path | str, files: dict[str, str]) -> None:
     for filename, code in files.items():
         file_rel = Path(filename)
 
-        # Überspringe Test-Dateien beim Anwenden der Änderungen
+        # Überspringe Test-Dateien
         if any(part == "tests" for part in file_rel.parts):
             print(f" {filename} (Test-Datei, übersprungen)")
             continue
@@ -108,6 +157,7 @@ def run_pytest():
         }
     except Exception as e:
         return {"success": False, "stdout": "", "stderr": str(e), "returncode": -1}
+
 
 
 def write_text_file(path: Path, content: str) -> None:
@@ -203,7 +253,7 @@ def collect_snapshot_files(code_dir: Path) -> dict[str, str]:
             file_path = Path(root) / filename
             relative_path = file_path.relative_to(code_dir)
             
-            # Überspringe Test-Dateien beim Sammeln
+            # Überspringe Test-Dateien
             if should_skip_snapshot_path(relative_path):
                 continue
                 
@@ -332,24 +382,6 @@ def build_diff_between_backup_and_refactored(
     return has_changes, ("\n\n".join(diffs)).strip()
 
 
-def verify_tests_exist(project_dir: Path) -> bool:
-    """Prüft ob Tests existieren."""
-    tests_dir = project_dir / "tests"
-    
-    if not tests_dir.exists():
-        print(f"  WARNUNG: Tests-Verzeichnis nicht gefunden: {tests_dir}")
-        return False
-    
-    test_files = list(tests_dir.glob("test_*.py")) + list(tests_dir.glob("*_test.py"))
-    
-    if not test_files:
-        print(f"  WARNUNG: Keine Test-Dateien gefunden in: {tests_dir}")
-        return False
-    
-    print(f"  ✓ {len(test_files)} Test-Datei(en) gefunden")
-    return True
-
-
 def process_iteration(
     iteration_dir: Path,
     project_src: Path,
@@ -390,7 +422,7 @@ def process_iteration(
         )
         return False, diff_has_changes, format_summary_line(iteration_dir.name, False, diff_has_changes)
 
-    # Erstelle Backup INKLUSIVE Tests
+    # Erstelle Backup OHNE Tests
     backup_project(project_src, backup_dir)
 
     diff_has_changes = False
@@ -404,10 +436,10 @@ def process_iteration(
             backup_dir=backup_dir, project_src=project_src, snapshot_files=snapshot_files
         )
         
-        # Führe Tests aus (Tests sollten jetzt existieren)
-        test_result = run_pytest(project_src)
+        # Führe Tests aus (Tests bleiben unverändert)
+        test_result = run_pytest()
     finally:
-        # Stelle alles wieder her INKLUSIVE Tests
+        # Stelle alles wieder her OHNE Tests zu überschreiben
         restore_project(backup_dir, project_src)
 
     test_success = bool(test_result.get("success"))
@@ -438,17 +470,6 @@ def process_refactoring_folder(
     print(f"Verarbeite: {refactoring_folder.name}")
     print(f"{'='*80}")
     
-    # Prüfe ob Tests existieren
-    if not verify_tests_exist(project_src):
-        print(f"  Überspringe {refactoring_folder.name} - keine Tests vorhanden")
-        return {
-            "folder": refactoring_folder.name,
-            "iterations": 0,
-            "passed": 0,
-            "failed": 0,
-            "summary_lines": ["FEHLER: Keine Tests gefunden"],
-            "error": "no_tests"
-        }
     
     results_root = test_results_base / refactoring_folder.name
     results_root.mkdir(parents=True, exist_ok=True)
@@ -537,13 +558,6 @@ def main() -> None:
     results_base = args.results_base.resolve()
 
     results_base.mkdir(parents=True, exist_ok=True)
-
-    # Prüfe initial ob das Projekt Tests hat
-    print("Initiale Prüfung...")
-    if not verify_tests_exist(project_src):
-        print("\nFEHLER: Keine Tests im Projekt gefunden!")
-        print(f"Bitte stelle sicher, dass {project_src / 'tests'} existiert und Test-Dateien enthält.")
-        return
 
     # Finde alle Refactoring-Ordner
     refactoring_folders = find_all_refactoring_folders(refactoring_base)

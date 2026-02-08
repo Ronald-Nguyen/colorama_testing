@@ -1,0 +1,88 @@
+--- backup/ansitowin32.py
++++ refactored/ansitowin32.py
+@@ -32 +32 @@
+-stream_isatty=stream.isatty
++returnstream.isatty()
+@@ -35,2 +34,0 @@
+-else:
+-returnstream_isatty()
+@@ -148 +146 @@
+-else:
++returnparams
+@@ -165 +163,2 @@
+-elifcommandin'J':
++return
++ifcommandin'J':
+@@ -167 +166,2 @@
+-elifcommandin'K':
++return
++ifcommandin'K':
+@@ -169 +169,2 @@
+-elifcommandin'Hf':
++return
++ifcommandin'Hf':
+@@ -171 +172,2 @@
+-elifcommandin'ABCD':
++return
++ifcommandin'ABCD':
+@@ -179,0 +182,3 @@
++self._set_title(command,paramstring)
++returntext
++def_set_title(self,command,paramstring):
+@@ -185 +189,0 @@
+-returntext
+
+--- backup/initialise.py
++++ refactored/initialise.py
+@@ -27,10 +27,2 @@
+-ifsys.stdoutisNone:
+-wrapped_stdout=None
+-else:
+-sys.stdout=wrapped_stdout=\
+-wrap_stream(orig_stdout,convert,strip,autoreset,wrap)
+-ifsys.stderrisNone:
+-wrapped_stderr=None
+-else:
+-sys.stderr=wrapped_stderr=\
+-wrap_stream(orig_stderr,convert,strip,autoreset,wrap)
++sys.stdout,wrapped_stdout=_wrap_std_stream(orig_stdout,convert,strip,autoreset,wrap)
++sys.stderr,wrapped_stderr=_wrap_std_stream(orig_stderr,convert,strip,autoreset,wrap)
+@@ -40,0 +33,5 @@
++def_wrap_std_stream(stream,convert,strip,autoreset,wrap):
++ifstreamisNone:
++returnNone,None
++wrapped=wrap_stream(stream,convert,strip,autoreset,wrap)
++returnwrapped,wrapped
+
+--- backup/winterm.py
++++ refactored/winterm.py
+@@ -60,0 +61,4 @@
++def_get_handle(self,on_stderr):
++ifon_stderr:
++returnwin32.STDERR
++returnwin32.STDOUT
+@@ -64,3 +68 @@
+-handle=win32.STDOUT
+-ifon_stderr:
+-handle=win32.STDERR
++handle=self._get_handle(on_stderr)
+@@ -76,3 +78 @@
+-handle=win32.STDOUT
+-ifon_stderr:
+-handle=win32.STDERR
++handle=self._get_handle(on_stderr)
+@@ -81,3 +81 @@
+-handle=win32.STDOUT
+-ifon_stderr:
+-handle=win32.STDERR
++handle=self._get_handle(on_stderr)
+@@ -88,3 +86 @@
+-handle=win32.STDOUT
+-ifon_stderr:
+-handle=win32.STDERR
++handle=self._get_handle(on_stderr)
+@@ -110,3 +106 @@
+-handle=win32.STDOUT
+-ifon_stderr:
+-handle=win32.STDERR
++handle=self._get_handle(on_stderr)

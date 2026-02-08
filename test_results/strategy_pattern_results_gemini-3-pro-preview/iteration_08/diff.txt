@@ -1,0 +1,54 @@
+--- backup/ansitowin32.py
++++ refactored/ansitowin32.py
+@@ -67,0 +68,11 @@
++self.win32_strategies={
++'m':self._win32_graphics_mode,
++'J':self._win32_erase_screen,
++'K':self._win32_erase_line,
++'H':self._win32_set_cursor_position,
++'f':self._win32_set_cursor_position,
++'A':self._win32_cursor_adjust,
++'B':self._win32_cursor_adjust,
++'C':self._win32_cursor_adjust,
++'D':self._win32_cursor_adjust,
++}
+@@ -157,18 +168,2 @@
+-ifcommand=='m':
+-forparaminparams:
+-ifparaminself.win32_calls:
+-func_args=self.win32_calls[param]
+-func=func_args[0]
+-args=func_args[1:]
+-kwargs=dict(on_stderr=self.on_stderr)
+-func(*args,**kwargs)
+-elifcommandin'J':
+-winterm.erase_screen(params[0],on_stderr=self.on_stderr)
+-elifcommandin'K':
+-winterm.erase_line(params[0],on_stderr=self.on_stderr)
+-elifcommandin'Hf':
+-winterm.set_cursor_position(params,on_stderr=self.on_stderr)
+-elifcommandin'ABCD':
+-n=params[0]
+-x,y={'A':(0,-n),'B':(0,n),'C':(n,0),'D':(-n,0)}[command]
+-winterm.cursor_adjust(x,y,on_stderr=self.on_stderr)
++ifcommandinself.win32_strategies:
++self.win32_strategies[command](params,command)
+@@ -187,0 +183,18 @@
++def_win32_graphics_mode(self,params,command):
++forparaminparams:
++ifparaminself.win32_calls:
++func_args=self.win32_calls[param]
++func=func_args[0]
++args=func_args[1:]
++kwargs=dict(on_stderr=self.on_stderr)
++func(*args,**kwargs)
++def_win32_erase_screen(self,params,command):
++winterm.erase_screen(params[0],on_stderr=self.on_stderr)
++def_win32_erase_line(self,params,command):
++winterm.erase_line(params[0],on_stderr=self.on_stderr)
++def_win32_set_cursor_position(self,params,command):
++winterm.set_cursor_position(params,on_stderr=self.on_stderr)
++def_win32_cursor_adjust(self,params,command):
++n=params[0]
++x,y={'A':(0,-n),'B':(0,n),'C':(n,0),'D':(-n,0)}[command]
++winterm.cursor_adjust(x,y,on_stderr=self.on_stderr)

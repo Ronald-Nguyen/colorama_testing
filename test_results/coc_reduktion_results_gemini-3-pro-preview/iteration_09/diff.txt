@@ -1,0 +1,70 @@
+--- backup/ansitowin32.py
++++ refactored/ansitowin32.py
+@@ -32 +32 @@
+-stream_isatty=stream.isatty
++returnstream.isatty()
+@@ -35,2 +34,0 @@
+-else:
+-returnstream_isatty()
+@@ -148 +146 @@
+-else:
++returnparams
+@@ -157,0 +156,10 @@
++self.call_win32_m(params)
++elifcommandin'J':
++winterm.erase_screen(params[0],on_stderr=self.on_stderr)
++elifcommandin'K':
++winterm.erase_line(params[0],on_stderr=self.on_stderr)
++elifcommandin'Hf':
++winterm.set_cursor_position(params,on_stderr=self.on_stderr)
++elifcommandin'ABCD':
++self.call_win32_cursor(command,params)
++defcall_win32_m(self,params):
+@@ -165,7 +173 @@
+-elifcommandin'J':
+-winterm.erase_screen(params[0],on_stderr=self.on_stderr)
+-elifcommandin'K':
+-winterm.erase_line(params[0],on_stderr=self.on_stderr)
+-elifcommandin'Hf':
+-winterm.set_cursor_position(params,on_stderr=self.on_stderr)
+-elifcommandin'ABCD':
++defcall_win32_cursor(self,command,params):
+@@ -179,0 +182,3 @@
++self.set_title(paramstring,command)
++returntext
++defset_title(self,paramstring,command):
+@@ -185 +189,0 @@
+-returntext
+
+--- backup/winterm.py
++++ refactored/winterm.py
+@@ -60,0 +61,4 @@
++def_get_handle(self,on_stderr):
++ifon_stderr:
++returnwin32.STDERR
++returnwin32.STDOUT
+@@ -64,3 +68 @@
+-handle=win32.STDOUT
+-ifon_stderr:
+-handle=win32.STDERR
++handle=self._get_handle(on_stderr)
+@@ -76,3 +78 @@
+-handle=win32.STDOUT
+-ifon_stderr:
+-handle=win32.STDERR
++handle=self._get_handle(on_stderr)
+@@ -81,3 +81 @@
+-handle=win32.STDOUT
+-ifon_stderr:
+-handle=win32.STDERR
++handle=self._get_handle(on_stderr)
+@@ -88,3 +86 @@
+-handle=win32.STDOUT
+-ifon_stderr:
+-handle=win32.STDERR
++handle=self._get_handle(on_stderr)
+@@ -110,3 +106 @@
+-handle=win32.STDOUT
+-ifon_stderr:
+-handle=win32.STDERR
++handle=self._get_handle(on_stderr)

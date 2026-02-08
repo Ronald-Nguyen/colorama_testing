@@ -1,0 +1,14 @@
+--- backup/initialise.py
++++ refactored/initialise.py
+@@ -30,2 +30 @@
+-sys.stdout=wrapped_stdout=\
+-wrap_stream(orig_stdout,convert,strip,autoreset,wrap)
++sys.stdout=wrapped_stdout=wrap_stream(orig_stdout,convert,strip,autoreset,wrap)
+@@ -35,2 +34 @@
+-sys.stderr=wrapped_stderr=\
+-wrap_stream(orig_stderr,convert,strip,autoreset,wrap)
++sys.stderr=wrapped_stderr=wrap_stream(orig_stderr,convert,strip,autoreset,wrap)
+@@ -75,2 +73 @@
+-wrapper=AnsiToWin32(stream,
+-convert=convert,strip=strip,autoreset=autoreset)
++wrapper=AnsiToWin32(stream,convert=convert,strip=strip,autoreset=autoreset)

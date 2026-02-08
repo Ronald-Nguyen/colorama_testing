@@ -1,0 +1,35 @@
+--- backup/ansitowin32.py
++++ refactored/ansitowin32.py
+@@ -174,0 +175,32 @@
++def_strategy_m(self,params):
++forparaminparams:
++ifparaminself.win32_calls:
++func_args=self.win32_calls[param]
++func=func_args[0]
++args=func_args[1:]
++kwargs=dict(on_stderr=self.on_stderr)
++func(*args,**kwargs)
++def_strategy_J(self,params):
++winterm.erase_screen(params[0],on_stderr=self.on_stderr)
++def_strategy_K(self,params):
++winterm.erase_line(params[0],on_stderr=self.on_stderr)
++def_strategy_Hf(self,params):
++winterm.set_cursor_position(params,on_stderr=self.on_stderr)
++def_strategy_ABCD(self,params):
++n=params[0]
++x,y={'A':(0,-n),'B':(0,n),'C':(n,0),'D':(-n,0)}[command]
++winterm.cursor_adjust(x,y,on_stderr=self.on_stderr)
++COMMAND_STRATEGIES={
++'m':_strategy_m,
++'J':_strategy_J,
++'K':_strategy_K,
++'H':_strategy_Hf,
++'f':_strategy_Hf,
++'A':_strategy_ABCD,
++'B':_strategy_ABCD,
++'C':_strategy_ABCD,
++'D':_strategy_ABCD,
++}
++defcall_win32(self,command,params):
++ifcommandinself.COMMAND_STRATEGIES:
++self.COMMAND_STRATEGIES[command](params)

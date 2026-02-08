@@ -1,0 +1,33 @@
+--- backup/ansitowin32.py
++++ refactored/ansitowin32.py
+@@ -35 +34,0 @@
+-else:
+@@ -148 +147 @@
+-else:
++returnparams
+@@ -157,0 +157,10 @@
++self._call_win32_m(params)
++elifcommandin'J':
++winterm.erase_screen(params[0],on_stderr=self.on_stderr)
++elifcommandin'K':
++winterm.erase_line(params[0],on_stderr=self.on_stderr)
++elifcommandin'Hf':
++winterm.set_cursor_position(params,on_stderr=self.on_stderr)
++elifcommandin'ABCD':
++self._call_win32_movement(command,params)
++def_call_win32_m(self,params):
+@@ -165,7 +174 @@
+-elifcommandin'J':
+-winterm.erase_screen(params[0],on_stderr=self.on_stderr)
+-elifcommandin'K':
+-winterm.erase_line(params[0],on_stderr=self.on_stderr)
+-elifcommandin'Hf':
+-winterm.set_cursor_position(params,on_stderr=self.on_stderr)
+-elifcommandin'ABCD':
++def_call_win32_movement(self,command,params):
+@@ -179,0 +183,3 @@
++self._set_title(command,paramstring)
++returntext
++def_set_title(self,command,paramstring):
+@@ -185 +190,0 @@
+-returntext

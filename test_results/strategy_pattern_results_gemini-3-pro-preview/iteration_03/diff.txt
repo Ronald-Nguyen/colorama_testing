@@ -1,0 +1,31 @@
+--- backup/ansitowin32.py
++++ refactored/ansitowin32.py
+@@ -67,0 +68,11 @@
++self.ansi_command_handlers={
++'m':self.call_win32_m,
++'J':self.call_win32_J,
++'K':self.call_win32_K,
++'H':self.call_win32_H_f,
++'f':self.call_win32_H_f,
++'A':self.call_win32_cursor,
++'B':self.call_win32_cursor,
++'C':self.call_win32_cursor,
++'D':self.call_win32_cursor,
++}
+@@ -157 +168,3 @@
+-ifcommand=='m':
++ifcommandinself.ansi_command_handlers:
++self.ansi_command_handlers[command](command,params)
++defcall_win32_m(self,command,params):
+@@ -165 +178 @@
+-elifcommandin'J':
++defcall_win32_J(self,command,params):
+@@ -167 +180 @@
+-elifcommandin'K':
++defcall_win32_K(self,command,params):
+@@ -169 +182 @@
+-elifcommandin'Hf':
++defcall_win32_H_f(self,command,params):
+@@ -171 +184 @@
+-elifcommandin'ABCD':
++defcall_win32_cursor(self,command,params):

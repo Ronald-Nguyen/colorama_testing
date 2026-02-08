@@ -1,0 +1,21 @@
+--- backup/ansitowin32.py
++++ refactored/ansitowin32.py
+@@ -32 +32 @@
+-stream_isatty=stream.isatty
++returnstream.isatty()
+@@ -35,2 +34,0 @@
+-else:
+-returnstream_isatty()
+@@ -148 +146 @@
+-else:
++returnparams
+@@ -165 +163,2 @@
+-elifcommandin'J':
++return
++ifcommandin'J':
+@@ -180,0 +180,3 @@
++self._set_title(paramstring)
++returntext
++def_set_title(self,paramstring):
+@@ -185 +186,0 @@
+-returntext

@@ -1,0 +1,35 @@
+--- backup/ansitowin32.py
++++ refactored/ansitowin32.py
+@@ -159 +159,2 @@
+-ifparaminself.win32_calls:
++ifparamnotinself.win32_calls:
++continue
+@@ -165 +166,2 @@
+-elifcommandin'J':
++return
++ifcommandin'J':
+@@ -167 +169,2 @@
+-elifcommandin'K':
++return
++ifcommandin'K':
+@@ -169 +172,2 @@
+-elifcommandin'Hf':
++return
++ifcommandin'Hf':
+@@ -171 +175,2 @@
+-elifcommandin'ABCD':
++return
++ifcommandin'ABCD':
+@@ -174,0 +180 @@
++return
+@@ -180,2 +186,4 @@
+-ifcommand==BEL:
+-ifparamstring.count(";")==1:
++ifcommand!=BEL:
++continue
++ifparamstring.count(";")!=1:
++continue
+@@ -183 +191,2 @@
+-ifparams[0]in'02':
++ifparams[0]notin'02':
++continue

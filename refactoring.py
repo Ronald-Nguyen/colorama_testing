@@ -8,9 +8,9 @@ from pathlib import Path
 from datetime import datetime
 from unittest import result
 
-REFACTORING = 'guard_clauses'
+REFACTORING = 'inline_variable'
 PATH = 'colorama'
-ITERATIONS = 4
+ITERATIONS = 5
 GEMINI3 = 'gemini-3-pro-preview'
 GEMINI2 = 'gemini-2.5-flash'
 LLAMA = 'llama-3.3-70b-versatile'

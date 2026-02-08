@@ -1,0 +1,8 @@
+--- backup/ansitowin32.py
++++ refactored/ansitowin32.py
+@@ -50,0 +51,2 @@
++self._initialize_conversion(convert,strip)
++def_initialize_conversion(self,convert,strip):
+@@ -54 +56 @@
+-fd=wrapped.fileno()
++fd=self.wrapped.fileno()

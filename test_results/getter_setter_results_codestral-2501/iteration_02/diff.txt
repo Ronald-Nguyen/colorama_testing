@@ -1,0 +1,21 @@
+--- backup/ansitowin32.py
++++ refactored/ansitowin32.py
+@@ -48 +48 @@
+-self.wrapped=wrapped
++self._wrapped=wrapped
+@@ -65 +65 @@
+-self.convert=convert
++self._convert=convert
+@@ -67,0 +68,12 @@
++@property
++defwrapped(self):
++returnself._wrapped
++@wrapped.setter
++defwrapped(self,value):
++self._wrapped=value
++@property
++defconvert(self):
++returnself._convert
++@convert.setter
++defconvert(self,value):
++self._convert=value

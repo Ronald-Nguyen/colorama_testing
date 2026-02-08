@@ -1,0 +1,119 @@
+--- backup/ansitowin32.py
++++ refactored/ansitowin32.py
+@@ -48,3 +48,3 @@
+-self.wrapped=wrapped
+-self.autoreset=autoreset
+-self.stream=StreamWrapper(wrapped,self)
++self._wrapped=wrapped
++self._autoreset=autoreset
++self._stream=StreamWrapper(wrapped,self)
+@@ -58 +58 @@
+-have_tty=notself.stream.closedandself.stream.isatty()
++have_tty=notself._stream.closedandself._stream.isatty()
+@@ -62 +62 @@
+-self.strip=strip
++self._strip=strip
+@@ -65,3 +65,45 @@
+-self.convert=convert
+-self.win32_calls=self.get_win32_calls()
+-self.on_stderr=self.wrappedissys.stderr
++self._convert=convert
++self._win32_calls=self.get_win32_calls()
++self._on_stderr=self._wrappedissys.stderr
++@property
++defwrapped(self):
++returnself._wrapped
++@wrapped.setter
++defwrapped(self,value):
++self._wrapped=value
++@property
++defautoreset(self):
++returnself._autoreset
++@autoreset.setter
++defautoreset(self,value):
++self._autoreset=value
++@property
++defstream(self):
++returnself._stream
++@stream.setter
++defstream(self,value):
++self._stream=value
++@property
++defstrip(self):
++returnself._strip
++@strip.setter
++defstrip(self,value):
++self._strip=value
++@property
++defconvert(self):
++returnself._convert
++@convert.setter
++defconvert(self,value):
++self._convert=value
++@property
++defwin32_calls(self):
++returnself._win32_calls
++@win32_calls.setter
++defwin32_calls(self,value):
++self._win32_calls=value
++@property
++defon_stderr(self):
++returnself._on_stderr
++@on_stderr.setter
++defon_stderr(self,value):
++self._on_stderr=value
+@@ -69 +111 @@
+-returnself.convertorself.striporself.autoreset
++returnself._convertorself._striporself._autoreset
+@@ -71 +113 @@
+-ifself.convertandwinterm:
++ifself._convertandwinterm:
+@@ -114 +156 @@
+-ifself.striporself.convert:
++ifself._striporself._convert:
+@@ -117,3 +159,3 @@
+-self.wrapped.write(text)
+-self.wrapped.flush()
+-ifself.autoreset:
++self._wrapped.write(text)
++self._wrapped.flush()
++ifself._autoreset:
+@@ -122 +164 @@
+-ifself.convert:
++ifself._convert:
+@@ -124,2 +166,2 @@
+-elifnotself.stripandnotself.stream.closed:
+-self.wrapped.write(Style.RESET_ALL)
++elifnotself._stripandnotself._stream.closed:
++self._wrapped.write(Style.RESET_ALL)
+@@ -137,2 +179,2 @@
+-self.wrapped.write(text[start:end])
+-self.wrapped.flush()
++self._wrapped.write(text[start:end])
++self._wrapped.flush()
+@@ -140 +182 @@
+-ifself.convert:
++ifself._convert:
+@@ -159,2 +201,2 @@
+-ifparaminself.win32_calls:
+-func_args=self.win32_calls[param]
++ifparaminself._win32_calls:
++func_args=self._win32_calls[param]
+@@ -163 +205 @@
+-kwargs=dict(on_stderr=self.on_stderr)
++kwargs=dict(on_stderr=self._on_stderr)
+@@ -166 +208 @@
+-winterm.erase_screen(params[0],on_stderr=self.on_stderr)
++winterm.erase_screen(params[0],on_stderr=self._on_stderr)
+@@ -168 +210 @@
+-winterm.erase_line(params[0],on_stderr=self.on_stderr)
++winterm.erase_line(params[0],on_stderr=self._on_stderr)
+@@ -170 +212 @@
+-winterm.set_cursor_position(params,on_stderr=self.on_stderr)
++winterm.set_cursor_position(params,on_stderr=self._on_stderr)
+@@ -174 +216 @@
+-winterm.cursor_adjust(x,y,on_stderr=self.on_stderr)
++winterm.cursor_adjust(x,y,on_stderr=self._on_stderr)
+@@ -187 +229 @@
+-self.wrapped.flush()
++self._wrapped.flush()

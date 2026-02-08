@@ -1,0 +1,20 @@
+--- backup/ansitowin32.py
++++ refactored/ansitowin32.py
+@@ -148 +148 @@
+-else:
++returnparams
+@@ -150 +150,2 @@
+-iflen(params)==0:
++iflen(params)!=0:
++returnparams
+@@ -180,2 +181,4 @@
+-ifcommand==BEL:
+-ifparamstring.count(";")==1:
++ifcommand!=BEL:
++continue
++ifparamstring.count(";")!=1:
++continue
+@@ -183 +186,2 @@
+-ifparams[0]in'02':
++ifparams[0]notin'02':
++continue

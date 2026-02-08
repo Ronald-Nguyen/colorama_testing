@@ -1,0 +1,12 @@
+--- backup/ansitowin32.py
++++ refactored/ansitowin32.py
+@@ -65 +65 @@
+-self.convert=convert
++self._convert=convert
+@@ -67,0 +68,6 @@
++@property
++defconvert(self):
++returnself._convert
++@convert.setter
++defconvert(self,value):
++self._convert=value
