@@ -8,7 +8,7 @@ from datetime import datetime
 from pathlib import Path
 
 PROJECT_SRC_PATH = Path("colorama")
-REFACTORING_BASE_PATH = Path("refactoring")
+REFACTORING_BASE_PATH = Path("refactorings")
 TEST_RESULTS_BASE = Path("test_results")
 
 ITERATION_PREFIX = "iteration_"
@@ -92,27 +92,14 @@ def apply_changes(project_dir: Path | str, files: dict[str, str]) -> None:
             print(f" Fehler beim Schreiben von {filename}: {e}")
 
 
-def run_pytest(project_dir: Path):
+def run_pytest():
     """Führt pytest aus und gibt das Ergebnis zurück."""
     try:
-        # Führe pytest im Projektverzeichnis aus
         result = subprocess.run(
-            ["pytest", "tests/", "-v"],
+            ["pytest"],
             capture_output=True,
             text=True,
-            cwd=str(project_dir.parent),  # Führe im übergeordneten Verzeichnis aus
         )
-        
-        # Prüfe ob Tests gefunden wurden
-        stdout = result.stdout
-        if "collected 0 items" in stdout or "no tests ran" in stdout:
-            return {
-                "success": False,
-                "stdout": stdout,
-                "stderr": result.stderr + "\nWARNING: Keine Tests gefunden!",
-                "returncode": 5,
-            }
-        
         return {
             "success": result.returncode == 0,
             "stdout": result.stdout,
